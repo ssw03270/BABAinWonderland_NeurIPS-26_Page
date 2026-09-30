@@ -1,0 +1,43 @@
+{
+  "scenario_name": "make_a_way",
+  "display_name": "Warm-up",
+  "difficulty": "original",
+  "width": 15,
+  "height": 11,
+  "layout": [
+    "###############",
+    "#BIY.WIS.RIP..#",
+    "#.............#",
+    "#wwwwwwwwwwwww#",
+    "#b..rr.......w#",
+    "#wwwww.wwwwwww#",
+    "#w......ZI...w#",
+    "#w........N..w#",
+    "#w..........fw#",
+    "#wwwwwwwwwwwww#",
+    "###############"
+  ],
+  "dynamic_directions": {},
+  "inactive_rules": [],
+  "target_plan": "Push the two rocks to reach the lower room. Push WIN upward to complete FLAG IS WIN, then touch the flag.",
+  "objective": "Push the rocks aside, then complete FLAG IS WIN in the lower room.",
+  "solution": [
+    "right",
+    "right",
+    "right",
+    "right",
+    "right",
+    "down",
+    "down",
+    "down",
+    "down",
+    "right",
+    "right",
+    "right",
+    "right",
+    "up",
+    "right",
+    "right",
+    "down"
+  ]
+}

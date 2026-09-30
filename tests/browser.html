@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Browser runtime verification</title>
+<h1>Browser runtime verification</h1>
+<p>Checks all three maps against 272 reference outputs, their solutions in both worlds, puzzle mechanics, map switching, comparison images, all 73 program hashes, and undo behavior.</p>
+<button id="verify">Run verification</button><pre id="result" role="status">Ready</pre>
+<script type="module">
+const button = document.getElementById("verify"), result = document.getElementById("result");
+button.onclick = () => {
+  button.disabled = true; result.textContent = "Loading the browser runtime…";
+  const worker = new Worker("../runtime/worker.js?v=5a4c9677dd45", {type:"module"});
+  worker.onmessage = ({data}) => {
+    result.textContent = data.status || data.error || data.result;
+    if (!data.status) { worker.terminate(); button.disabled = false; }
+  };
+  worker.onerror = event => { result.textContent = event.message; worker.terminate(); button.disabled = false; };
+  worker.postMessage({id:1,path:"/verify"});
+};
+</script></html>

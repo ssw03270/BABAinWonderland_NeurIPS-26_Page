@@ -1,0 +1,2 @@
+# Preserve original program hashes and reproducible bundle bytes on every OS.
+* -text

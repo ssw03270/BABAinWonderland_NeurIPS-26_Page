@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Baba in Wonderland: Online Self-Supervised Dynamics Discovery for Executable World Models. Explore the benchmark and meet Alice, a system that learns executable dynamics from interaction.">
+  <meta name="theme-color" content="#ffffff">
+  <title>Baba in Wonderland</title>
+  <link rel="icon" type="image/gif" href="assets/sprites/icon/BABA.gif">
+  <link rel="stylesheet" href="styles.css?v=dfa7a6cf9976">
+  <script src="app.js?v=199cb9482ce5" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#overview">Skip to content</a>
+<header class="site-header">
+  <nav class="nav wrap" aria-label="Main navigation">
+    <a class="wordmark" href="#top"><span class="brand-icon"><img src="assets/sprites/icon/BABA.gif" alt="" width="24" height="24"></span>BABA IN WONDERLAND</a>
+    <div class="nav-links"><a href="#overview">Overview</a><a href="#method">Method</a><a href="#results">Results</a><a href="#play">Play <span aria-hidden="true">↗</span></a></div>
+  </nav>
+</header>
+<main id="top">
+  <section class="hero wrap" aria-labelledby="paper-title">
+    <p class="eyebrow">From interaction to executable world models</p>
+    <h1 id="paper-title">Baba in Wonderland</h1>
+    <p class="paper-subtitle">Online Self-Supervised Dynamics Discovery<br class="desktop-break"> for Executable World Models</p>
+    <div class="authors">
+      <a href="https://ssw03270.github.io/">SeungWon Seo<sup>*1</sup></a>
+      <span>DongHeun Han<sup>*2</sup></span>
+      <a href="https://seongraenoh.github.io/">SeongRae Noh<sup>1</sup></a>
+      <a href="https://iiixr.korea.ac.kr/">HyeongYeop Kang<sup>1</sup></a>
+    </div>
+    <p class="affiliations"><span><sup>1</sup>Korea University</span><span><sup>2</sup>Kyung Hee University</span></p>
+    <div class="hero-links">
+      <a class="button primary" href="https://arxiv.org/abs/2605.16725" target="_blank" rel="noopener">Read the paper <span aria-hidden="true">↗</span></a>
+      <a class="button" href="https://github.com/ssw03270/BABAinWonderland_NeurIPS-26" target="_blank" rel="noopener">Code <span aria-hidden="true">↗</span></a>
+      <a class="button" href="#play">Play the environment <span aria-hidden="true">↓</span></a>
+    </div>
+    <p class="hero-note">Same world. Unfamiliar words. Rules discovered through experience.</p>
+  </section>
+
+  <figure class="teaser wrap">
+    <button class="figure-button" data-figure="assets/figures/teaser.webp" aria-label="Enlarge the Alice overview figure"><img src="assets/figures/teaser.webp" width="2400" height="1492" alt="Default World and Wonderland have the same dynamics but different property labels. Exploration exposes prediction errors, leading Alice to revise its executable program."><span class="zoom-hint">View full size ↗</span></button>
+    <figcaption><span class="caption-label">THE IDEA</span> An unfamiliar vocabulary removes lexical shortcuts. Alice discovers the dynamics by interacting, finding prediction errors, and revising executable code.</figcaption>
+  </figure>
+
+  <section class="section wrap" id="overview">
+    <div class="section-heading"><span class="section-number">01 / OVERVIEW</span><h2>When words stop<br>giving the rules away.</h2></div>
+    <div class="overview-grid">
+      <div class="prose"><p><em>Baba Is You</em> is a puzzle game whose rules are movable word blocks. <strong>BABA IS YOU</strong> means you control Baba; <strong>FLAG IS WIN</strong> makes touching a flag a win. Rearrange the words into <strong>ROCK IS YOU</strong>, and you control the rocks instead.</p><p><a href="https://store.steampowered.com/app/736260/Baba_Is_You/" target="_blank" rel="noopener">Explore the original Baba Is You on Steam ↗</a></p><p><strong>Baba in Wonderland</strong> keeps the same mechanics but changes familiar property words: YOU becomes STRANGE. Without a dictionary, rule descriptions, or a learning reward, the agent has to discover what these words do by acting and observing the result.</p><p><strong>Alice learns a world model written in Python:</strong> give it a state and an action, and it predicts the next state. The research measures how accurately this code predicts changes in the world. In the demo below, you or a saved solution choose the actions; the learned program predicts their outcomes.</p></div>
+      <div class="word-example" aria-label="Example label remapping"><div><span class="small-label">DEFAULT WORLD</span><p><b>BABA</b><b>IS</b><b>YOU</b></p></div><span class="example-arrow" aria-hidden="true">↓</span><div><span class="small-label">BABA IN WONDERLAND</span><p><b>BABA</b><b>IS</b><b>STRANGE</b></p></div><p class="small-note">The label changes. The behavior stays the same.</p></div>
+    </div>
+    <details class="abstract"><summary>Read the abstract <span aria-hidden="true">+</span></summary><div class="prose"><p>Executable world models can be read, edited, executed, and reused for planning, but only if the program captures the environment's transition law rather than semantic shortcuts in its surface vocabulary. We study online executable world-model learning under prior misalignment, where an agent must induce state-dependent dynamics from interaction evidence alone, without rule descriptions, reward signals, or trustworthy lexical priors.</p><p>We introduce <strong>Alice</strong>, a closed-loop system that treats failed candidate updates as structural signal: when a candidate explains a new transition but loses previously explained ones, the preservation conflict reveals dynamics that the current program had conflated. Alice refines these conflicts into hypothesis classes that both provide compact, class-stratified preservation counterexamples for update and guide frontier exploration toward transitions that are novel and underrepresented with respect to the current program.</p><p>We evaluate Alice on <em>Baba in Wonderland</em>, a prior-misaligned variant of <em>Baba Is You</em> that preserves simulator dynamics while replacing semantically meaningful rule-property labels with unrelated words. Experiments show that Alice substantially improves executable world-model learning under prior misalignment, and ablations show that both class refinement and class-aware exploration contribute.</p></div></details>
+  </section>
+
+  <section class="play-section" id="play">
+    <div class="wrap">
+      <div class="section-heading"><span class="section-number">02 / WATCH THE PROGRAM CHANGE</span><h2>See the mistake.<br>See what changes.</h2><p>Two moments on the same map, replayed through saved programs. First, a model learns to move Baba. Then, it learns that pushing one object can move a whole chain.</p></div>
+      <p class="examples-context">DEFAULT WORLD <span>YOU controls Baba. PUSH makes an object pushable.</span></p>
+      <p id="example-status" class="game-context" role="status">Preparing the comparison images…</p>
+      <div class="failure-examples" id="failure-examples" hidden>
+        <article class="failure-case" data-case="movement">
+          <div class="case-heading"><div><span class="small-label">01 / MOVEMENT</span><h3>From standing still to moving right.</h3></div><span class="case-action">Action: RIGHT →</span></div>
+          <div class="case-images">
+            <figure><figcaption><span>INPUT</span>Before the action</figcaption><img data-shot="before" alt="Input scene: Baba before moving right."></figure>
+            <figure><figcaption><span>v001 · FAILS</span>Baba stays still</figcaption><img data-shot="failed" alt="Version v001 predicts Baba staying at its original position. Dashed outlines mark the mismatch."></figure>
+            <figure><figcaption><span>v002 · RESOLVED</span>Baba moves right</figcaption><img data-shot="fixed" alt="Version v002 predicts Baba one cell to the right, matching the actual environment."></figure>
+          </div>
+          <p>v001 copies the input state. v002 moves the object marked YOU, matching the real next state for this action.</p>
+        </article>
+        <article class="failure-case" data-case="push">
+          <div class="case-heading"><div><span class="small-label">02 / PUSHING A CHAIN</span><h3>Moving yourself is only the beginning.</h3></div><span class="case-action">Action: RIGHT →</span></div>
+          <div class="case-images">
+            <figure><figcaption><span>INPUT</span>Baba meets a chain</figcaption><img data-shot="before" alt="Input scene: Baba next to two rocks in a narrow passage, before a right action."></figure>
+            <figure><figcaption><span>v002 · FAILS</span>Baba overlaps the rock</figcaption><img data-shot="failed" alt="Version v002 puts Baba in the first rock's cell, hidden behind the unmoved rock. Both rocks stay still. Dashed outlines mark the mismatch."></figure>
+            <figure><figcaption><span>v005 · RESOLVED</span>The whole chain moves</figcaption><img data-shot="fixed" alt="Version v005 predicts Baba and both rocks moving right together, matching the actual environment."></figure>
+          </div>
+          <p>v002 moves Baba into the rock's cell without pushing either object. By v005, the program moves both rocks together and matches the real next state.</p>
+        </article>
+      </div>
+      <p class="game-context">Fixed images from the supplied Default World programs on the first map, cropped to the action. Each row uses the same input and RIGHT action; the resolved prediction exactly matches the simulator. Red dashed outlines mark errors. These are illustrative replays, not a claim that training encountered these exact scenes.</p>
+      <div class="play-heading"><div><span class="small-label">NOW, TRY IT YOURSELF</span><h3>Your next move.</h3></div><p id="map-objective">Choose a map below. Solve it yourself or use Auto to replay a solution.</p></div>
+      <div class="game-shell" id="game-shell" aria-busy="true">
+        <div class="world-switcher"><div><span class="small-label">FIRST, UNDERSTAND. THEN, QUESTION.</span><p id="world-question">What if the words stopped helping?</p></div><div class="segmented" role="group" aria-label="World setting"><button data-world="default" aria-pressed="true" disabled>Default World</button><button data-world="wonderland" aria-pressed="false" disabled>Wonderland</button></div></div>
+        <p class="world-explanation" id="world-explanation" aria-live="polite">YOU identifies what you control, PUSH what you can push, and WIN the goal. Start here, then switch to Wonderland to keep the scene and change the vocabulary.</p>
+        <div class="game-toolbar"><div class="map-title"><span class="small-label" id="world-label">DEFAULT WORLD</span><label class="map-label" for="map-select">Map <select id="map-select" disabled><option>Loading…</option></select></label></div><label class="version-picker" for="version-select">Program <select id="version-select" disabled><option>Loading…</option></select></label></div>
+        <div class="demo-workspace"><div class="play-workspace">
+        <div class="comparison-heading"><span id="prediction-result" role="status" aria-live="polite">Make a move to compare.</span><span id="model-version"></span></div>
+        <div class="game-layout"><div class="comparison-boards">
+          <div class="board-panel"><h3>Actual environment <span id="actual-terminal"></span></h3><div class="board-wrap"><canvas id="game-canvas" width="780" height="620" tabindex="0" aria-label="Interactive Baba game board. Focus here, then use arrow keys or WASD to move, space to wait, Z to undo, and R to restart.">Use the controls to move through the environment.</canvas><p class="board-message" id="board-message" role="status">Preparing the environment…</p></div></div>
+          <div class="board-panel"><h3>Learned world model <span id="predicted-terminal"></span></h3><div class="board-wrap"><canvas id="prediction-canvas" width="780" height="620" aria-label="Learned program's predicted next state"></canvas><p class="board-message" id="prediction-message">Make a move to see a prediction.</p></div></div>
+        </div>
+          <aside class="game-controls"><div class="game-counter"><span class="small-label">EXPLORE IT YOURSELF</span><p><strong id="step-count">0</strong><span>steps</span></p></div><p id="game-status" role="status" aria-live="polite">Discover what the words do.</p><div class="dpad" aria-label="Movement controls"><button class="up" data-action="up" aria-label="Move up" disabled>↑</button><button class="left" data-action="left" aria-label="Move left" disabled>←</button><button class="wait" data-action="idle" aria-label="Wait one turn" disabled>·</button><button class="right" data-action="right" aria-label="Move right" disabled>→</button><button class="down" data-action="down" aria-label="Move down" disabled>↓</button></div><div class="game-tools"><button id="undo" disabled>↶ Undo</button><button id="restart" disabled>↻ Restart</button><button id="auto-play" aria-pressed="false" title="Replay the saved solution from step 0" disabled>▶ Auto</button><span id="auto-progress">Saved solution · starts at step 0</span></div><p class="keyboard-note">Arrow keys / WASD to move<br>Space to wait · Z to undo · R to restart</p><p class="play-note">Click the actual board to use your keyboard.</p></aside>
+        </div>
+        <div class="game-footer"><span>Same state + same action</span><span id="comparison-detail">Only the program version changes.</span></div>
+        </div><section class="program-panel" aria-label="Selected program source">
+          <div class="program-heading"><div><span class="small-label">THE EXECUTABLE WORLD MODEL</span><h3 id="program-filename">default/v021.py</h3></div><span id="program-size"></span></div>
+          <div class="code-toolbar"><div class="segmented" role="group" aria-label="Code view"><button data-code-view="focus" aria-pressed="true">Key function</button><button data-code-view="source" aria-pressed="false">Full code</button><button data-code-view="diff" aria-pressed="false">Changes</button></div><button id="copy-program" disabled>Copy code</button></div>
+          <p id="code-context"></p><pre class="program-code" tabindex="0" aria-label="Python source code"><code id="program-source"></code></pre>
+          <p class="code-note">Original saved Python, executed for the prediction on the left. Changes compares this revision with the previous saved revision.</p>
+        </section></div>
+      </div>
+      <p class="game-context">Each world opens with its latest supplied program and remembers your selection. Changing worlds or versions keeps your game in place. Saved programs predict each move from the actual pre-action state; they are not trained live here. Revision numbers are specific to each run, not LLM-call counts. These examples do not measure full-benchmark accuracy.</p>
+    </div>
+  </section>
+
+  <section class="section wrap" id="method">
+    <div class="section-heading"><span class="section-number">03 / MEET ALICE</span><h2>A failed update<br>can teach you something.</h2><p>A fix can correct one prediction while breaking another. Alice uses these conflicts to separate past experiences into finer groups, called hypothesis classes. The same groups guide which old behaviors to preserve in the next code update and which unfamiliar dynamics to explore next.</p></div>
+    <ol class="method-steps"><li><span>01</span><h3>Observe a failure</h3><p>Interact with the environment and find a transition the current program cannot explain.</p></li><li><span>02</span><h3>Refine the hypotheses</h3><p>A rejected update separates preserved and lost transitions into finer hypothesis classes.</p></li><li><span>03</span><h3>Learn, then explore</h3><p>Use the same classes to choose preservation examples and seek underrepresented dynamics.</p></li></ol>
+    <div class="method-detail"><div class="detail-heading"><span class="small-label">THE PROGRAMMER</span><h3>Keep what works.<br>Separate what doesn't.</h3><p>Representative counterexamples guide the next code revision. Acceptance is checked against all previously explained transitions.</p></div><figure><button class="figure-button" data-figure="assets/figures/classes.webp" aria-label="Enlarge the hypothesis-class refinement figure"><img loading="lazy" src="assets/figures/classes.webp" width="2400" height="887" alt="Four stages: generate a candidate, identify lost transitions, refine classes and resample evidence, then accept a preserving update."><span class="zoom-hint">View full size ↗</span></button><figcaption>Rejected updates expose distinctions that the previous program had conflated.</figcaption></figure></div>
+    <div class="method-detail"><div class="detail-heading"><span class="small-label">THE EXPLORER</span><h3>Let the model's gaps<br>guide the next move.</h3><p>Frontier candidates are scored by embedding novelty and expected coverage of rare hypothesis classes.</p></div><figure><button class="figure-button" data-figure="assets/figures/exploration.webp" aria-label="Enlarge the update-guided exploration figure"><img loading="lazy" src="assets/figures/exploration.webp" width="2400" height="808" alt="Update-guided exploration combines novelty in a contrastive embedding space with expected coverage of underrepresented hypothesis classes."><span class="zoom-hint">View full size ↗</span></button><figcaption>One source of evidence shapes both program updates and data collection.</figcaption></figure></div>
+  </section>
+
+  <section class="results-section" id="results"><div class="wrap">
+    <div class="section-heading"><span class="section-number">04 / RESULTS</span><h2>Learning beyond<br>familiar vocabulary.</h2><p>Exact next-state prediction, including the uncommon transitions that are easy to overlook.</p></div>
+    <div class="results-toolbar"><div class="segmented" role="group" aria-label="Evaluation setting"><button data-evaluation="online" aria-pressed="true">Online learning</button><button data-evaluation="offline" aria-pressed="false">Held-out generalization</button></div><label>World <select id="result-world"><option value="wonderland">Baba in Wonderland</option><option value="default">Default World</option></select></label></div>
+    <p class="result-context" id="result-context"></p>
+    <div class="table-scroll"><table><caption class="sr-only" id="results-caption">Online prediction accuracy in Baba in Wonderland</caption><thead><tr><th scope="col">Method</th><th scope="col">All accuracy ↑</th><th scope="col">Balanced accuracy ↑</th><th scope="col">LLM calls</th></tr></thead><tbody id="result-rows"></tbody></table></div>
+    <p id="result-note" class="result-note"></p>
+    <p class="metric-note">All accuracy is exact one-step state matching. Balanced accuracy uses a class-reduced set grouped by action and state-change signature. Results use GPT-5.4, a 100-call cap, and one run per configuration; they are point estimates. <a href="https://arxiv.org/html/2605.16725v1#S5" target="_blank" rel="noopener">Evaluation details ↗</a></p>
+  </div></section>
+
+  <section class="section wrap citation-section" id="citation"><div class="section-heading"><span class="section-number">05 / CITE THIS WORK</span><h2>Baba in your bibliography.</h2></div><div class="citation-box"><div class="citation-toolbar"><span>BibTeX</span><button id="copy-citation">Copy citation</button></div><pre><code id="bibtex">@article{seo2026baba,
+  title={Baba in Wonderland: Online Self-Supervised Dynamics Discovery for Executable World Models},
+  author={SeungWon Seo and DongHeun Han and SeongRae Noh and HyeongYeop Kang},
+  journal={arXiv preprint arXiv:2605.16725},
+  year={2026},
+  url={https://arxiv.org/abs/2605.16725}
+}</code></pre></div><p class="contact">Questions about the paper or code? <a href="mailto:ssw03270@korea.ac.kr">Get in touch ↗</a></p></section>
+</main>
+<footer class="footer wrap"><div><a class="wordmark" href="#top">BABA IN WONDERLAND <span aria-hidden="true">↑</span></a><p>SeungWon Seo, DongHeun Han, SeongRae Noh, and HyeongYeop Kang · 2026</p></div><details class="credits"><summary>Game assets &amp; permission</summary><p>The original Baba Is You game assets and level/map data are credited to the original game. We obtained permission from the game's developer to use these assets and map data for this research package. This repository does not grant separate rights to reuse the original game assets or map data outside the permitted research context; preserve this attribution and usage notice when sharing derived packages.</p></details></footer>
+<dialog id="figure-dialog" aria-label="Expanded paper figure"><button id="close-figure" aria-label="Close expanded figure">Close ×</button><img id="expanded-figure" alt=""></dialog>
+</body>
+</html>
