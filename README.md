@@ -77,6 +77,8 @@ python -B tests/verify_runtime.py
 
 The repository is served directly as a [GitHub Pages static site](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages), configured with **Settings → Pages → Deploy from a branch → main / (root)**. Publish updates by pushing the complete file tree and current prebuilt archive to `main`. `.nojekyll` preserves the Python package files. No backend, build workflow, or secret is required. Asset and worker paths are relative, including under `/BABAinWonderland_NeurIPS-26_Page/`.
 
+The today/total badge beside the footer's title comes from [hits.sh](https://hits.sh), which counts every load of the page, refreshes and local previews included. Its daily numbers are at [hits.sh/ssw03270.github.io/BABAinWonderland_NeurIPS-26_Page/](https://hits.sh/ssw03270.github.io/BABAinWonderland_NeurIPS-26_Page/). If hits.sh is unreachable or blocked, the badge removes itself.
+
 ## Sources and attribution
 
 - [Paper](https://arxiv.org/abs/2605.16725) and the supplied manuscript/figures.
