@@ -7,14 +7,37 @@ from hashlib import sha256
 import json
 from pathlib import Path
 import sys
+import time
 
 ROOT = Path(__file__).resolve().parents[1]
 MAP_ID = "make_a_way"
+EXAMPLE_MOVES = {"movement": ["right"], "push": ["right"] * 3, "wall": ["up"]}  # fixed comparisons: moves from the first map's start
 sys.path.insert(0, str(ROOT / "runtime/vendor"))
 from src.environments import BabaWrapper
 from src.program_model.sandbox import ProgramSandbox, SandboxConfig
 from src.program_model.predictor import ProgramWorldModelPredictor
 from src.program_model.state_codec import normalize_state_payload, states_equivalent
+
+
+class PageSandbox(ProgramSandbox):
+    """The research sandbox with a cheaper guard: its time limit is checked whenever the code calls a function, not on
+    every line, since a per-line tracer makes every prediction several times slower in the browser. A prediction that
+    runs past the limit still stops, at its next call; lines are not counted."""
+
+    def _run_with_limits(self, fn):
+        limit = self.config.timeout_ms / 1000.0
+        start = time.perf_counter()
+
+        def guard(frame, event, arg):  # noqa: ANN001, ANN202 (a call: no tracer for its lines)
+            if time.perf_counter() - start > limit:
+                raise TimeoutError(f"Execution timeout exceeded: over {limit:.1f}s")
+
+        previous = sys.gettrace()
+        sys.settrace(guard)
+        try:
+            return fn(), 0
+        finally:
+            sys.settrace(previous)
 
 
 def create_game():
@@ -23,7 +46,7 @@ def create_game():
     maps = {name: json.loads((ROOT / "data/maps" / f"{name}.json").read_text(encoding="utf-8")) for name in (MAP_ID, "double_crossing", "remote_control")}
     models = {}
     programs = {}
-    sandbox = ProgramSandbox(SandboxConfig(timeout_ms=1500, line_budget=1_000_000))
+    sandbox = PageSandbox(SandboxConfig(timeout_ms=1500))
     for world in ("default", "wonderland"):
         models[world], programs[world] = {}, {}
         versions = sorted((ROOT / "programs" / world).glob("v[0-9][0-9][0-9].py"))
@@ -57,7 +80,7 @@ def create_game():
             env_kwargs={"scenario_type": session["map"]},
         )
         env.reset(seed=42)
-        session.update(env=env, history=[env.snapshot()], transitions=[None], example=None)
+        session.update(env=env, history=[env.snapshot()], transitions=[None], example=None, trail={})
 
     def advance(session, action):
         env = session["env"]
@@ -69,8 +92,8 @@ def create_game():
     def show_example(session, example):
         session["map"] = MAP_ID
         reset(session)
-        for _ in range(1 if example == "movement" else 3):
-            advance(session, "right")
+        for action in EXAMPLE_MOVES[example]:
+            advance(session, action)
         session["example"] = example
 
     def payload(session):
@@ -81,8 +104,7 @@ def create_game():
         comparison = None
         if transition:
             # Version changes replay the identical pre-action state, never the outcome.
-            state = remap_properties(transition["before"], aliases) if world == "wonderland" else transition["before"]
-            result = models[world][version].predict(state, transition["action"])
+            result = models[world][version].predict(as_seen(transition["before"], world), transition["action"])
             comparison = {"action": transition["action"], world: compare_prediction(result, env.get_visualization_state(), world)}
         return {
             "board": env.get_visualization_state(), "map": session["map"],
@@ -94,7 +116,40 @@ def create_game():
             "won": bool(env.last_terminated and env.last_reward > 0),
             "world": world, "versions": list(programs[world]), "program": programs[world][version],
             "comparison": comparison, "example": session["example"], "solution": maps[session["map"]]["solution"],
+            "before": transition["before"] if transition else None,
         }
+
+    def trail(session):
+        """Every move so far: its action, and whether the selected version of the code predicted it right. A move's
+        verdict never changes, so each version's are kept and only new moves are predicted (undone ones are dropped)."""
+        world = session["world"]
+        moves = session["transitions"][1:]
+        known = session["trail"].setdefault((world, session["selected_versions"][world]), [])
+        del known[len(moves):]
+        model = models[world][session["selected_versions"][world]]
+        for k in range(len(known), len(moves)):
+            after = moves[k + 1]["before"] if k + 1 < len(moves) else session["env"].get_visualization_state()
+            known.append(predicts_right(model, as_seen(moves[k]["before"], world), moves[k]["action"], as_seen(after, world)))
+        return [{"action": move["action"], "match": match} for move, match in zip(moves, known)]
+
+    def verdicts(session):
+        """For the last move, whether each saved version of the current world's code predicts it right."""
+        transition = session["transitions"][-1]
+        if not transition:
+            return []
+        world = session["world"]
+        state, expected = as_seen(transition["before"], world), as_seen(session["env"].get_visualization_state(), world)
+        return [{"version": version, "match": predicts_right(model, state, transition["action"], expected)}
+                for version, model in models[world].items()]
+
+    def as_seen(state, world):
+        """A state as the world's code sees it: in Wonderland, its property words renamed."""
+        return remap_properties(state, aliases) if world == "wonderland" else state
+
+    def predicts_right(model, state, action, expected):
+        """Whether ``model`` predicts the move right: the comparison's verdict alone, without its cells or display."""
+        result = model.predict(state, action)
+        return result.success and states_equivalent(expected, normalize_state_payload(result.predicted_state_obj))
 
     def remap_properties(state, mapping):
         mapped = deepcopy(state)
@@ -107,7 +162,7 @@ def create_game():
         if not result.success:
             return {"error": result.error.message, "board": None, "match": False, "cells": []}
         predicted = normalize_state_payload(result.predicted_state_obj)
-        expected = remap_properties(actual, aliases) if world == "wonderland" else actual
+        expected = as_seen(actual, world)
         display = remap_properties(predicted, reverse_aliases) if world == "wonderland" else predicted
         actual_objects = Counter(json.dumps(obj, sort_keys=True) for obj in actual["objects"])
         predicted_objects = Counter(json.dumps(obj, sort_keys=True) for obj in display["objects"])
@@ -152,8 +207,12 @@ def create_game():
                 session["transitions"].pop()
                 session["env"].restore(session["history"][-1], refresh_cache=True)
                 session["example"] = None
+        elif path == "/trail":
+            return {"trail": trail(session)}
+        elif path == "/verdicts":
+            return {"verdicts": verdicts(session)}
         elif path == "/example":
-            if body["example"] not in ("movement", "push"):
+            if body["example"] not in EXAMPLE_MOVES:
                 raise ValueError("Unknown example.")
             show_example(session, body["example"])
         elif path:

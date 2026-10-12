@@ -4,7 +4,7 @@ const ready = (async () => {
   const pyodide = await loadPyodide();
   self.postMessage({status:"Preparing the game and saved programs…"});
   const [response] = await Promise.all([
-    fetch(new URL("./bundle.zip?v=1b3d5b90a6d4", import.meta.url)),
+    fetch(new URL("./bundle.zip?v=7f45276c0799", import.meta.url)),
     pyodide.loadPackage(["numpy", "pyyaml", "opencv-python"]),
   ]);
   if (!response.ok) throw new Error("The game files could not be downloaded.");
