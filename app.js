@@ -102,7 +102,8 @@ function barPanel({title, worlds, rows}) {
 }
 $("result-bars").replaceChildren(...results.map(barPanel));
 
-// The full numbers, as the paper's tables (the ablations only here): per column the best accuracy in bold.
+// The full numbers, as the paper's tables (the ablations only here): Alice's row first; per column the best accuracy
+// in bold.
 function statsTable(caption, groups, rows, note) {
   const table = el("table"), head = el("thead"), body = el("tbody");
   const columns = groups.flatMap(({label, cols}) => cols.map((col) => ({label, ...col})));
@@ -121,7 +122,7 @@ function statsTable(caption, groups, rows, note) {
     const values = rows.map(({cells}) => get(cells)?.[0]).filter((v) => v !== undefined);
     return higher ? Math.max(...values) : null;
   });
-  for (const {name, ours, cells} of rows) {
+  for (const {name, ours, cells} of [...rows.filter((r) => r.ours), ...rows.filter((r) => !r.ours)]) {
     const row = el("tr", ours ? "ours" : ""), method = el("th", "", name);
     method.scope = "row";
     row.append(method);
@@ -153,8 +154,7 @@ $("result-tables").replaceChildren(
 );
 
 const canvas = $("game-canvas");
-const predictionCanvas = $("prediction-canvas");
-const runtime = new Worker(new URL("runtime/worker.js?v=c7f23e5a4b25", document.baseURI), {type:"module"});
+const runtime = new Worker(new URL("runtime/worker.js?v=0f5e3e3cfa53", document.baseURI), {type:"module"});
 const pendingRequests = new Map();
 let requestId = 0, runtimeError = null;
 runtime.addEventListener("message", ({data}) => {
@@ -214,8 +214,8 @@ function drawAll() {
 }
 setInterval(() => { boil = (boil + 1) % 3; drawAll(); }, BOIL_MS);
 // Effects over a board, as the game shows them: sparkles from what is YOU on a win, a puff where a thing is destroyed;
-// the game's board has its own, and so has the prediction's. They animate frame by frame while any is alive.
-const effects = {game: [], prediction: [], hero: []}, EFFECT_MS = {spark: 1300, puff: 560};
+// the game's board has its own, and so has the stage's little level. They animate frame by frame while any is alive.
+const effects = {game: [], hero: []}, EFFECT_MS = {spark: 1300, puff: 560};
 let animating = false;
 function addEffects(board, kind, cells) {
   const t0 = performance.now();
@@ -262,34 +262,81 @@ const youCells = (board) => {
   const you = youWords(board);
   return board.objects.filter((o) => o.type === "world_object" && you.has(o.word)).map((o) => o.position);
 };
-// A won board: the step ended with something that is YOU on something that is WIN.
-function wins(board) {
-  if (!board.step?.terminated) return false;
-  const win = youWords(board, "win"), you = new Set(youCells(board).map((p) => p.join(",")));
-  return board.objects.some((o) => o.type === "world_object" && win.has(o.word) && you.has(o.position.join(",")));
-}
-// The prediction's effects, when a prediction is shown: puffs where it destroys things, sparkles if it wins.
-function predictionEffects() {
-  const predicted = game.comparison?.[game.world]?.board;
-  if (!predicted || !game.before) return;
-  addEffects("prediction", "puff", destroyed(game.before, predicted));
-  if (wins(predicted)) addEffects("prediction", "spark", youCells(predicted));
-}
-
 function drawBoards() {
   if (!game) return;
   const prediction = game.comparison?.[game.world];
   const objects = [...game.board.objects, ...(prediction?.board?.objects || [])];
   const [width, height] = game.board.grid_size;
-  // Both views use the same camera, so a difference never moves the frame.
+  // The camera takes in both the game's things and the prediction's, so a pick never moves the frame.
   const xs = objects.map((o) => o.position[0]), ys = objects.map((o) => o.position[1]);
   const x0 = objects.length ? Math.max(0, Math.min(...xs) - 2) : 0;
   const y0 = objects.length ? Math.max(0, Math.min(...ys) - 2) : 0;
   const x1 = objects.length ? Math.min(width - 1, Math.max(...xs) + 2) : width - 1;
   const y1 = objects.length ? Math.min(height - 1, Math.max(...ys) + 2) : height - 1;
   const frame = {x0,y0,x1,y1};
-  drawBoard(canvas, game.board, frame, prediction?.cells || [], game.world, game.aliases, effectsOn("game"));
-  drawBoard(predictionCanvas, prediction?.board || {objects:[]}, frame, prediction?.cells || [], game.world, game.aliases, effectsOn("prediction"));
+  // The board shows the picked version's prediction (the game itself before a move, or when the code returns
+  // nothing); where the prediction is wrong, marks say how the game really is: nothing drawn over anything.
+  const shown = prediction?.board || game.board, diff = prediction?.board ? predictionDiff(game.board, prediction.board) : null;
+  drawBoard(canvas, shown, frame, [], game.world, game.aliases, (ctx, cell) => {
+    if (diff) drawDiff(ctx, cell, diff);
+    effectsOn("game")(ctx, cell);
+  });
+}
+// What a prediction gets wrong, thing by thing: of each kind of thing, the places only the game has (things the
+// prediction lacks) and the places only the prediction has (things the game does not have); and of the things it puts
+// in the right place, those it turns the wrong way (the game turns a pushed thing to face the push).
+function predictionDiff(real, predicted) {
+  const tally = (board) => {
+    const m = new Map();
+    for (const o of board.objects) {
+      const k = `${o.type}:${o.word}@${o.position}`;
+      if (!m.has(k)) m.set(k, {object: o, facing: []});
+      m.get(k).facing.push(o.direction);
+    }
+    return m;
+  };
+  const was = tally(real), now = tally(predicted), lacks = [], extra = [], turned = [];
+  for (const k of new Set([...was.keys(), ...now.keys()])) {
+    const a = was.get(k)?.facing || [], b = now.get(k)?.facing || [], {object} = was.get(k) || now.get(k);
+    for (let i = a.length; i < b.length; i++) extra.push(object);
+    for (let i = b.length; i < a.length; i++) lacks.push(object);
+    const left = [...b];
+    for (const facing of a.slice(0, b.length)) {
+      const j = left.indexOf(facing);
+      if (j >= 0) left.splice(j, 1);
+      else turned.push({object, facing});
+    }
+  }
+  return {lacks, extra, turned, words: [...new Set([...lacks, ...extra].map((o) => o.word.toUpperCase()))],
+          turnedWords: [...new Set(turned.map(({object}) => object.word.toUpperCase()))]};
+}
+const MISS = "#ff5b8a", FACE = {"facing up": [0, -1], "facing right": [1, 0], "facing down": [0, 1], "facing left": [-1, 0]};
+// The marks on a shown prediction, saying how the game really is: a cross on a thing the game does not have; a dashed
+// frame where the game has a thing the prediction lacks; a dashed frame with a pointer on a thing the game turns
+// another way, the pointer showing the way it really faces.
+function drawDiff(ctx, cell, {lacks, extra, turned}) {
+  const dashed = ([x, y]) => {
+    const [px, py] = cell(x, y);
+    ctx.strokeStyle = MISS; ctx.lineWidth = 3; ctx.setLineDash([7, 5]);
+    ctx.beginPath(); ctx.roundRect(px + 3, py + 3, TILE - 6, TILE - 6, 7); ctx.stroke();
+    ctx.setLineDash([]);
+  };
+  ctx.save();
+  for (const {position: [x, y]} of extra) {
+    const [px, py] = cell(x, y), m = 9;
+    ctx.strokeStyle = MISS; ctx.lineWidth = 5; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(px + m, py + m); ctx.lineTo(px + TILE - m, py + TILE - m);
+    ctx.moveTo(px + TILE - m, py + m); ctx.lineTo(px + m, py + TILE - m); ctx.stroke();
+  }
+  for (const {position} of lacks) dashed(position);
+  for (const {object, facing} of turned) {
+    dashed(object.position);
+    const [dx, dy] = FACE[facing] || [0, 0], [px, py] = cell(...object.position), [cx, cy] = [px + TILE / 2, py + TILE / 2];
+    const [tx, ty] = [cx + dx * TILE * .62, cy + dy * TILE * .62];
+    ctx.fillStyle = MISS;
+    ctx.beginPath(); ctx.moveTo(tx + dx * 9, ty + dy * 9); ctx.lineTo(tx - dy * 8, ty + dx * 8); ctx.lineTo(tx + dy * 8, ty - dx * 8); ctx.fill();
+  }
+  ctx.restore();
 }
 
 // ``overlay(ctx, cell)`` draws on top; ``cell(x, y)`` is a grid cell's top-left pixel.
@@ -326,8 +373,9 @@ function youWords(board, property = "you") {
   return words;
 }
 const STEP = {right: [1, 0], left: [-1, 0], up: [0, -1], down: [0, 1]};
-// The examples' marks: the key pressed (an arrow from what is YOU), where things really went that the wrong
-// prediction misses (faded), and the cells a fix got right (green).
+// The examples' marks: the key pressed (an arrow from what is YOU), what a wrong prediction gets wrong (marked as the
+// demo marks it: a cross on what the game does not have, a dashed frame where the game has a thing), and the cells a
+// fix got right (green).
 const marks = {
   arrow: (board, action) => (ctx, cell) => {
     const [dx, dy] = STEP[action];
@@ -340,13 +388,7 @@ const marks = {
       ctx.beginPath(); ctx.moveTo(bx + dx * 12, by + dy * 12); ctx.lineTo(bx - dy * 11, by + dx * 11); ctx.lineTo(bx + dy * 11, by - dx * 11); ctx.fill();
     }
   },
-  ghosts: (actual, predicted, cells) => (ctx, cell) => {
-    const wrong = new Set(cells.map((c) => c.join(",")));
-    const shown = new Set(predicted.objects.map((o) => `${o.word}@${o.position.join(",")}`));
-    ctx.globalAlpha = .42;
-    for (const o of actual.objects.filter((o) => o.type === "world_object" && wrong.has(o.position.join(",")) && !shown.has(`${o.word}@${o.position.join(",")}`))) drawObject(ctx, o, ...cell(...o.position), "default", {});
-    ctx.globalAlpha = 1;
-  },
+  wrong: (actual, predicted) => (ctx, cell) => drawDiff(ctx, cell, predictionDiff(actual, predicted)),
   right: (cells) => (ctx, cell) => {
     ctx.strokeStyle = "#4fd58a"; ctx.lineWidth = 3;
     for (const [x, y] of cells) { const [px, py] = cell(x, y); ctx.strokeRect(px + 2, py + 2, TILE - 4, TILE - 4); }
@@ -354,7 +396,7 @@ const marks = {
 };
 // Each story steps through one picture: the move pressed, the older version's wrong prediction, the newer version's
 // right one; the bar under it shows the step, its line says what the picture shows and the code line behind it.
-const STORY_MS = 2200;
+const STORY_MS = 4200;
 const STORIES = {
   wall: [
     {shot: "before", text: "Baba presses ↑ under a wall."},
@@ -372,7 +414,9 @@ function showStep(story, k) {
   story.step = k;
   story.since = performance.now();
   const {shot, text, code} = STORIES[story.scene][k], verdict = {failed: "no", fixed: "yes"}[shot];
-  story.steps.forEach((step, n) => step.classList.toggle("active", n === k));
+  story.steps.forEach((step) => step.classList.remove("active"));
+  void story.steps[k].offsetWidth;  // (a restart: the bar fills again from empty, the same step clicked again too)
+  story.steps[k].classList.add("active");
   story.badge.hidden = !verdict;
   story.badge.className = `story-badge ${verdict || ""}`;
   story.badge.textContent = verdict === "no" ? "✗" : "✓";
@@ -400,7 +444,7 @@ async function renderExamples() {
       const frame = {x0, y0, x1, y1};
       const shots = {
         before: [example.before, [], marks.arrow(example.before, example.action)],
-        failed: [example.failed.board, example.failed.cells, marks.ghosts(example.actual, example.failed.board, example.failed.cells)],
+        failed: [example.failed.board, [], marks.wrong(example.actual, example.failed.board)],
         fixed: [example.fixed.board, [], marks.right(example.failed.cells)],
       };
       const card = document.querySelector(`.story[data-case="${example.scene}"]`), canvas = card.querySelector("canvas");
@@ -428,22 +472,24 @@ async function renderExamples() {
   }
 }
 
-// The prediction's verdict in a few words: the cells it gets wrong; when every cell is right, the win it misses or
-// predicts (a game here ends only in a win: DEFEAT removes what is YOU and play goes on).
+// The prediction's verdict in a few words: the things it gets wrong; when every thing is in place, the way one faces
+// (the game turns a pushed thing to face the push), or the win it misses or predicts (a game here ends only in a win:
+// DEFEAT removes what is YOU and play goes on).
 function verdictText(prediction) {
   if (!prediction) return "make a move";
-  if (prediction.error) return "✗ error";
+  if (prediction.error) return "✗ no prediction";
   if (prediction.match) return "✓ same as the game";
-  const n = prediction.cells.length;
-  if (n) return `✗ ${n} ${n === 1 ? "cell differs" : "cells differ"}`;
+  const {words, turnedWords} = predictionDiff(game.board, prediction.board);
+  const list = (w) => `${w.slice(0, 3).join(", ")}${w.length > 3 ? ", …" : ""}`;
+  if (words.length) return `✗ gets ${list(words)} wrong`;
+  if (turnedWords.length) return `✗ ${list(turnedWords)} ${turnedWords.length === 1 ? "faces" : "face"} the wrong way`;
   if (!prediction.terminationMatch) return prediction.board.step?.terminated ? "✗ predicts a win" : "✗ misses the win";
   return "✗ state differs";
 }
 function renderComparison() {
   const prediction = game.comparison?.[game.world];
-  $("prediction-message").hidden = Boolean(prediction?.board);
-  $("prediction-message").textContent = prediction?.error ? game.program.version === game.versions[0] ? "The first saved code returns no state." : "This version's code fails on this move." : "Make a move to see a prediction.";
   $("prediction-result").textContent = verdictText(prediction);
+  $("board-name").textContent = prediction?.board && !prediction.match ? "Prediction" : "Real game";
   $("prediction-result").dataset.match = prediction ? String(prediction.match) : "pending";
   drawBoards();
 }
@@ -493,8 +539,7 @@ function renderChanges() {
   changes.hidden = codeView !== "diff";
   if (codeView !== "diff") { counts.replaceChildren(`${program.lines} lines`); return; }
   const {added, removed, functions} = diffRows.changes;
-  if (program.previous) counts.replaceChildren(el("span", "add", `+${added}`), el("span", "del", `−${removed}`), `vs ${program.previous}`);
-  else counts.replaceChildren(el("span", "add", `+${added}`), "the first saved code");
+  counts.replaceChildren(el("span", "add", `+${added}`), el("span", "del", `−${removed}`));
   const groups = ["changed", "new"].map((how) => {
     const names = [...functions].filter(([, kind]) => kind === how).map(([name]) => name);
     if (!names.length) return null;
@@ -529,7 +574,7 @@ function renderCode() {
   pre.scrollLeft = 0;
   pre.scrollTop = 0;
   markFunctionInView();
-  $("copy-program").textContent = "Copy";
+  $("copy-program").classList.remove("copied");
 }
 function renderStrip() {
   const strip = $("versions");
@@ -567,6 +612,20 @@ function renderStrip() {
     }
     before = verdict;
   }
+  // Before and after the fix, one click apart: on the version that fixed this move, a way to the one just before it
+  // (wrong); on that one, the way back. Elsewhere nothing.
+  const k = game.versions.indexOf(picked), flip = $("fix-flip"), previous = game.versions[k - 1], next = game.versions[k + 1];
+  const fixedHere = (v, w) => verdicts.get(v) === true && verdicts.get(w) === false;
+  const to = fixedHere(picked, previous) ? previous : fixedHere(next, picked) ? next : null;
+  flip.hidden = !to;
+  if (to && flip.dataset.version !== to) {
+    flip.dataset.version = to;
+    flip.textContent = to === previous ? `↶ ${to} before the fix` : `↷ ${to} after the fix`;
+    flip.classList.remove("nudge");
+    void flip.offsetWidth;
+    flip.classList.add("nudge");
+  }
+  if (!to) delete flip.dataset.version;
 }
 // The verdicts sweep in as a wave, from the first saved version to the latest (the pick already made).
 function wave() {
@@ -589,52 +648,85 @@ function arrowIcon(action) {
   svg.append(shape);
   return svg;
 }
-let trailToken = 0;
+let trailToken = 0, trailShown = [];
 async function refreshTrail() {
   const token = ++trailToken;
   try {
     const {trail} = await runtimeRequest("/trail");
     if (token !== trailToken) return;
-    const box = $("trail");
-    box.replaceChildren(...trail.map(({action, match}, k) => {
-      const move = el("li", match ? "right" : "wrong");
-      move.append(arrowIcon(action));
-      move.title = `Step ${k + 1}: ${action}, ${match ? "right" : "wrong"} in ${game.program.version}`;
-      return move;
-    }));
-    box.scrollTop = box.scrollHeight;
+    trailShown = trail;
+    renderTrail();
   } catch { /* the record stays as it was */ }
 }
-// What the board itself shows instead of instructions: the arrow keys before the first move, WIN when won, the way
-// back (undo, restart) when an attempt has ended.
+// One row: the newest moves that fit; older ones leave from the left (again whenever the row's width changes).
+function renderTrail() {
+  const box = $("trail");
+  box.replaceChildren(...trailShown.map(({action, match}, k) => {
+    const move = el("li", match ? "right" : "wrong");
+    move.append(arrowIcon(action));
+    move.title = `Step ${k + 1}: ${action === "idle" ? "stay" : action}, ${match ? "right" : "wrong"} in ${game.program.version}`;
+    return move;
+  }));
+  while (box.children.length > 1 && box.scrollWidth > box.clientWidth) box.firstElementChild.remove();
+}
+new ResizeObserver(renderTrail).observe($("trail"));
+// What the board itself shows instead of instructions: on a touch screen, a swipe hint before the first move; WIN
+// when won (and the ways on); the way back (undo, restart) when an attempt has ended.
+// The map after this one (the first after the last).
+function nextMap() {
+  const k = game.maps.findIndex(({id}) => id === game.map);
+  return {id: game.maps[(k + 1) % game.maps.length].id, first: k + 1 === game.maps.length};
+}
 function renderOverlay() {
   const overlay = $("game-overlay");
-  const keyRow = (pairs) => {
+  // an end's ways on: buttons that say their key (a click or a tap does what the key does)
+  const ways = (pairs) => {
     const row = el("span", "keys");
-    for (const [key, label] of pairs) { row.append(el("kbd", "", key)); if (label) row.append(el("span", "key-label", label)); }
+    for (const [key, label, sign] of pairs) {
+      const button = el("button", "sign-key");
+      button.dataset.sign = sign;
+      button.append(el("kbd", "", key), el("span", "key-label", label));
+      row.append(button);
+    }
     return row;
   };
-  const winTile = () => {
-    const win = el("i", "tile win");
-    win.style.backgroundImage = "url(assets/sprites/text/WIN.png)";
-    return win;
+  // a win, said in the game's letters: YOU WIN!, each word popping out after the one before, then a burst of pixel
+  // sparks from behind them (WIN's yellow, YOU's pink, white)
+  const youWin = () => {
+    const words = el("span", "you-win"), burst = el("span", "burst");
+    for (const word of ["YOU", "WIN", "EXCLAIM"]) {
+      const tile = el("i", word === "EXCLAIM" ? "tile bang" : "tile");
+      tile.style.backgroundImage = `url(assets/sprites/title/${word}.png)`;
+      words.append(tile);
+    }
+    for (let k = 0; k < 26; k++) {
+      const a = (k / 26) * Math.PI * 2 + (k % 3) * .13, r = 70 + (k * 37) % 70, spark = el("i");
+      spark.style.cssText = `--x:${(Math.cos(a) * r * 1.7).toFixed(1)}px;--y:${(Math.sin(a) * r).toFixed(1)}px;--s:${8 + (k % 3) * 3}px;--c:${["#ede285", "#d9396a", "#fff"][k % 3]}`;
+      burst.append(spark);
+    }
+    words.prepend(burst);
+    return words;
   };
-  const signs = {won: () => [winTile(), keyRow([["R", "play again"]])], ended: () => [keyRow([["Z", "undo"], ["R", "restart"]])]};
-  // the prediction shows the game's signs for the state it predicts: a predicted win, a predicted end
-  const predicted = game.comparison?.[game.world]?.board;
-  const predictedState = !predicted?.step?.terminated ? "" : wins(predicted) ? "won" : "ended";
-  $("prediction-overlay").dataset.state = predictedState;
-  $("prediction-overlay").replaceChildren(...(predictedState ? signs[predictedState]() : []));
+  // an end's signs on one card over the board, apart from its words and walls
+  const card = (...parts) => {
+    const box = el("div", "sign-card");
+    box.append(...parts);
+    return box;
+  };
+  // The board shows the picked version's prediction, so its win is the one shown (a game here ends only in a win);
+  // the way back appears only when the game itself is over.
+  const prediction = game.comparison?.[game.world];
+  const shownWon = prediction?.board ? Boolean(prediction.board.step?.terminated) : game.won;
   let state = "", parts = [];
-  if (game.won) {
+  if (shownWon) {
     state = "won";
-    parts = signs.won();
-  } else if (game.ended) {
+    parts = [card(youWin(), ...(game.won ? [ways([["R", "play again", "restart"], ["N", nextMap().first ? "first map" : "next map", "next"]])] : []))];
+  } else if (game.ended && !game.won) {
     state = "ended";
-    parts = signs.ended();
+    parts = [card(ways([["Z", "undo", "undo"], ["R", "restart", "restart"]]))];
   } else if (game.steps === 0 && !autoRunning) {
     state = "start";
-    parts = [keyRow([["←"], ["↑"], ["↓"], ["→"]])];
+    parts = [el("span", "swipe-hint", "Swipe to move")];  // (on a touch screen only)
   }
   overlay.dataset.state = state;
   overlay.replaceChildren(...parts);
@@ -656,7 +748,8 @@ function setControls() {
   document.querySelectorAll("[data-world]").forEach(button => { button.disabled = busy || autoRunning || !game; });
   $("map-select").disabled = busy || autoRunning || !game;
   $("auto-play").disabled = !autoRunning && (busy || !game);
-  $("auto-play").textContent = autoRunning ? `■ ${game.steps} / ${game.solution.length}` : autoPaused ? "▶ Continue" : "▶ Auto";
+  const [icon, label] = autoRunning ? ["■", ` ${game.steps} / ${game.solution.length}`] : autoPaused ? ["▶", " Continue"] : ["▶", " Auto"];
+  $("auto-play").replaceChildren(el("span", "", icon), el("span", "label", label));  // (a phone shows the icon only)
   $("auto-play").title = autoPaused ? "Continue the saved solution from this step" : "Replay the saved solution from step 0";
   $("auto-play").setAttribute("aria-pressed", String(autoRunning));
   $("copy-program").disabled = !game;
@@ -664,7 +757,7 @@ function setControls() {
 }
 function renderGame() {
   $("step-count").textContent = game.steps;
-  $("step-unit").textContent = game.steps === 1 ? "step" : "steps";
+  $("step-unit").textContent = `/ ${game.maxSteps} steps`;
   $("board-message").hidden = true;
   renderVersions(); renderComparison(); renderOverlay(); setControls();
 }
@@ -697,7 +790,6 @@ async function gameRequest(path = "", body) {
       addEffects("game", "puff", destroyed(before.board, game.board));
       if (game.won && !before.won) addEffects("game", "spark", youCells(game.board));
     }
-    if (path === "/action" || path === "/version") predictionEffects();
     if (judged?.length && !autoRunning) wave();
     refreshTrail();
     return true;
@@ -741,6 +833,7 @@ $("auto-play").addEventListener("click", async () => {
 });
 document.querySelectorAll("[data-world]").forEach(button => button.addEventListener("click", () => gameRequest("/world",{world:button.dataset.world})));
 // A changed menu lets go of the keys at once, so the next arrow key moves Baba instead of the menu's choice.
+$("fix-flip").addEventListener("click", () => { $("fix-flip").blur(); gameRequest("/version", {version: $("fix-flip").dataset.version}); });
 $("versions").addEventListener("click", (event) => {
   const button = event.target.closest("button[data-version]");
   if (button) { button.blur(); gameRequest("/version", {version: button.dataset.version}); }
@@ -760,17 +853,38 @@ document.querySelectorAll("[data-code-view]").forEach(button => button.addEventL
   renderCode();
 }));
 $("copy-program").addEventListener("click", async () => {
-  try { await navigator.clipboard.writeText(game.program.source); $("copy-program").textContent = "Copied"; }
-  catch { $("copy-program").textContent = "Select Full code to copy"; }
+  const button = $("copy-program");
+  button.blur();
+  try {
+    await navigator.clipboard.writeText(game.program.source);
+    button.classList.add("copied");  // (a tick for a moment)
+    setTimeout(() => button.classList.remove("copied"), 1400);
+  } catch { button.title = "Copying failed: open Full code and copy it by hand"; }
 });
 document.querySelectorAll("[data-action]").forEach((button) => button.addEventListener("click", () => {
   button.blur();
   gameRequest("/action",{action:button.dataset.action});
 }));
 $("undo").addEventListener("click", () => gameRequest("/undo",{}));
+$("game-overlay").addEventListener("click", (event) => {
+  const sign = event.target.closest("[data-sign]")?.dataset.sign;
+  if (!sign || busy || autoRunning) return;
+  gameRequest(...{undo: ["/undo", {}], restart: ["/reset", {map: game.map}], next: ["/reset", {map: nextMap().id}]}[sign]);
+});
 $("restart").addEventListener("click", () => gameRequest("/reset",{map:game.map}));
 // The keys play the game while the pointer is on it, or after a click (or Tab) into it until one elsewhere; they then
 // never scroll the page or move between its controls.
+// On a touch screen the board itself takes moves: a swipe moves Baba that way.
+let swipeFrom = null;
+canvas.addEventListener("pointerdown", (event) => { swipeFrom = event.pointerType === "mouse" ? null : [event.clientX, event.clientY]; });
+canvas.addEventListener("pointercancel", () => { swipeFrom = null; });
+canvas.addEventListener("pointerup", (event) => {
+  if (!swipeFrom) return;
+  const dx = event.clientX - swipeFrom[0], dy = event.clientY - swipeFrom[1];
+  swipeFrom = null;
+  if (Math.max(Math.abs(dx), Math.abs(dy)) < 24 || busy || autoRunning || !game || game.ended) return;
+  gameRequest("/action", {action: Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : (dy > 0 ? "down" : "up")});
+});
 const shell = $("game-shell");
 let pointerOn = false, clickedIn = false;
 const keysOn = () => pointerOn || clickedIn;
@@ -783,74 +897,98 @@ const ACTIONS = {arrowup:"up",w:"up",arrowright:"right",d:"right",arrowdown:"dow
 document.addEventListener("keydown", (event) => {
   const key = event.key.toLowerCase();
   if (!keysOn() || !game || event.ctrlKey || event.metaKey || event.altKey || event.target.closest?.("select")) return;
-  if (!ACTIONS[key] && key !== "r" && key !== "z") return;
+  if (!ACTIONS[key] && !["r", "z", "n"].includes(key)) return;
   event.preventDefault();
   if (shell.contains(document.activeElement)) document.activeElement.blur();
   if (event.repeat || busy || autoRunning) return;
   if (key === "z" && game.canUndo) gameRequest("/undo",{});
   else if (key === "r") gameRequest("/reset",{map:game.map});
+  else if (key === "n" && game.won) gameRequest("/reset",{map:nextMap().id});
   else if (ACTIONS[key] && !game.ended) gameRequest("/action",{action:ACTIONS[key]});
 });
 // The stage's little level, played as the game plays it: Baba pushes FLAG IS against WIN (the rule lights up with a
-// pop), steps down and walks to the flag, one tile a step with a hop; on the flag, WIN's sparkles and happy hops; then
-// it starts over. The canvas has a tile of room around the level for the sparkles.
+// pop); then the board goes to Wonderland: YOU and WIN tremble and pop into their new words (STRANGE, SHRINK), and
+// Baba, the same game under new words, steps down and walks to the flag, one tile a step with a hop; on the flag, the
+// win's sparkles and happy hops; then it starts over in the original words. The canvas has a tile of room around the
+// level for the sparkles.
 (function heroLevel() {
   const canvas = $("hero-walk"), ctx = canvas.getContext("2d");
   const LEVEL = [
     {type: "world_object", word: "baba", position: [0, 0]}, {type: "rule_noun", word: "flag", position: [1, 0]},
     {type: "rule_operator", word: "is", position: [2, 0]}, {type: "rule_property", word: "win", position: [4, 0]},
-    {type: "world_object", word: "flag", position: [7, 1]},
+    {type: "world_object", word: "flag", position: [8, 1]}, {type: "rule_noun", word: "baba", position: [6, 0]},
+    {type: "rule_operator", word: "is", position: [7, 0]}, {type: "rule_property", word: "you", position: [8, 0]},
   ];
-  const MOVES = ["right", "down", "right", "right", "right", "right", "right", "right"];
-  const STEP_MS = 260, SLIDE_MS = 120, START_MS = 500, RULE_MS = 450, WIN_MS = 1100, FADE_MS = 300;
+  const BABA = 0, MADE = [1, 2, 3], FLAG = 4, ALWAYS = [5, 6, 7], NEW_WORDS = [3, 7];  // (indices into LEVEL)
+  const MOVES = ["right", "down", "right", "right", "right", "right", "right", "right", "right"];
+  const STEP_MS = 240, SLIDE_MS = 110, START_MS = 450, RULE_MS = 350, TREMBLE_MS = 500, POP_MS = 250;
+  const WIN_MS = 1000, FADE_MS = 300;
+  let aliases = null;  // the Wonderland words (data/aliases.json); until they load, the level stays in the original ones
+  fetch("data/aliases.json").then((r) => r.json()).then((a) => { aliases = a; }).catch(() => {});
   // every state, one per move: Baba moves a tile, pushing the words in front of it (a flag is not pushed)
   const states = [LEVEL];
   for (const move of MOVES) {
     const now = states.at(-1).map((o) => ({...o, position: [...o.position]})), [dx, dy] = STEP[move];
     const at = (x, y) => now.find((o) => o.type !== "world_object" && o.position[0] === x && o.position[1] === y);
-    const baba = now[0], chain = [];
+    const baba = now[BABA], chain = [];
     for (let x = baba.position[0] + dx, y = baba.position[1] + dy, o; (o = at(x, y)); x += dx, y += dy) chain.push(o);
     for (const o of [baba, ...chain]) o.position = [o.position[0] + dx, o.position[1] + dy];
     states.push(now);
   }
-  const begin = MOVES.map((_, k) => START_MS + k * STEP_MS + (k > 0 ? RULE_MS : 0));  // (a pause as the rule lights up)
+  // the moves' start times: after the first (the push), a pause as the rule lights up, then the trip to Wonderland
+  const tremble = START_MS + STEP_MS + RULE_MS, pop = tremble + TREMBLE_MS;
+  const begin = MOVES.map((_, k) => START_MS + k * STEP_MS + (k > 0 ? RULE_MS + TREMBLE_MS + POP_MS : 0));
   const won = begin.at(-1) + SLIDE_MS, CYCLE = begin.at(-1) + STEP_MS + WIN_MS + FADE_MS;
   const cell = (x, y) => [(x + 1) * TILE, (y + 1) * TILE];
   const t0 = performance.now();
-  let shown = true, cycle = -1, sparked = false;
+  let shown = true, cycle = -1, popped = false, sparked = false;
   new IntersectionObserver(([entry]) => { shown = entry.isIntersecting; }).observe(canvas);
   requestAnimationFrame(function frame(now) {
     requestAnimationFrame(frame);
     if (!shown) return;
     const elapsed = now - t0, t = elapsed % CYCLE;
-    if (Math.floor(elapsed / CYCLE) !== cycle) { cycle = Math.floor(elapsed / CYCLE); sparked = false; }
+    if (Math.floor(elapsed / CYCLE) !== cycle) { cycle = Math.floor(elapsed / CYCLE); popped = sparked = false; }
     const k = begin.findLastIndex((b) => t >= b), u = k < 0 ? 0 : Math.min(1, (t - begin[k]) / SLIDE_MS);
     const from = states[k < 0 ? 0 : k], to = states[k < 0 ? 0 : k + 1], e = 1 - (1 - u) ** 3;
-    const lit = t >= begin[0] + SLIDE_MS, pop = lit ? .18 * Math.sin(Math.PI * Math.min(1, (t - begin[0] - SLIDE_MS) / 260)) : 0;
-    if (t >= won && !sparked) { sparked = true; addEffects("hero", "spark", [to[0].position]); }
+    const lit = t >= begin[0] + SLIDE_MS;
+    const litPop = lit ? .18 * Math.sin(Math.PI * Math.min(1, (t - begin[0] - SLIDE_MS) / 260)) : 0;
+    const wonder = Boolean(aliases) && t >= pop, shaking = aliases && t >= tremble && t < pop;
+    const wonderPop = wonder ? .35 * Math.sin(Math.PI * Math.min(1, (t - pop) / POP_MS)) : 0;
+    if (wonder && !popped) { popped = true; addEffects("hero", "puff", NEW_WORDS.map((j) => to[j].position)); }
+    if (t >= won && !sparked) { sparked = true; addEffects("hero", "spark", [to[BABA].position]); }
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.imageSmoothingEnabled = false;
     ctx.globalAlpha = 1 - Math.min(1, Math.max(0, t - (CYCLE - FADE_MS)) / FADE_MS);
-    const place = (o, j) => cell(from[j].position[0] + (o.position[0] - from[j].position[0]) * e, from[j].position[1] + (o.position[1] - from[j].position[1]) * e);
-    // the flag and the words (dim until they form a rule, as the game shows them), then Baba: a hop each step, a
-    // squash as it lands, and on the flag two happy hops
-    for (const j of [4, 1, 2, 3]) {
-      const [x, y] = place(to[j], j), grow = j < 4 ? pop : 0;
+    const place = (j) => {
+      const a = from[j].position, b = to[j].position;
+      return cell(a[0] + (b[0] - a[0]) * e, a[1] + (b[1] - a[1]) * e);
+    };
+    // the flag and the words (dim until they form a rule, as the game shows them; the words that change tremble,
+    // harder as it nears, then pop), then Baba: a hop each step, a squash as it lands, and on the flag happy hops
+    for (const j of [FLAG, ...MADE, ...ALWAYS]) {
+      let [x, y] = place(j), grow = MADE.includes(j) ? litPop : 0;
+      if (NEW_WORDS.includes(j)) {
+        if (shaking) {
+          const s = 1 + 3 * (t - tremble) / TREMBLE_MS;
+          x += s * Math.sin(t * .11 + j); y += s * Math.sin(t * .17 + 2 * j);
+        }
+        grow += wonderPop;
+      }
       ctx.save();
-      if (j < 4) ctx.globalAlpha *= lit ? 1 : .45;
+      if (MADE.includes(j) && !lit) ctx.globalAlpha *= .45;
       ctx.translate(x + TILE / 2, y + TILE / 2);
       ctx.scale(1 + grow, 1 + grow);
-      drawObject(ctx, to[j], -TILE / 2, -TILE / 2, "default", {});
+      drawObject(ctx, to[j], -TILE / 2, -TILE / 2, wonder ? "wonderland" : "default", aliases || {});
       ctx.restore();
     }
-    const landed = k < 0 ? 1 : (t - begin[k] - SLIDE_MS) / 90, happy = t >= won ? (t - won) / 520 : 0;
+    const landed = k < 0 ? 1 : (t - begin[k] - SLIDE_MS) / 90, happy = t >= won ? (t - won) / 480 : 0;
     const lift = k >= 0 && u < 1 ? 7 * Math.sin(Math.PI * u) : happy > 0 && happy < 2 ? 12 * Math.abs(Math.sin(Math.PI * happy)) : 0;
     const squash = landed > 0 && landed < 1 ? .1 * Math.sin(Math.PI * landed) : 0;
-    const [bx, by] = place(to[0], 0);
+    const [bx, by] = place(BABA);
     ctx.save();
     ctx.translate(bx + TILE / 2, by + TILE - lift);
     ctx.scale(1 + squash, 1 - squash);
-    drawObject(ctx, to[0], -TILE / 2, -TILE, "default", {});
+    drawObject(ctx, to[BABA], -TILE / 2, -TILE, "default", {});
     ctx.restore();
     effectsOn("hero")(ctx, cell);
     ctx.globalAlpha = 1;

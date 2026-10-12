@@ -11,6 +11,7 @@ import time
 
 ROOT = Path(__file__).resolve().parents[1]
 MAP_ID = "make_a_way"
+MAX_STEPS = 300  # an attempt ends here (the simulator truncates it)
 EXAMPLE_MOVES = {"movement": ["right"], "push": ["right"] * 3, "wall": ["up"]}  # fixed comparisons: moves from the first map's start
 sys.path.insert(0, str(ROOT / "runtime/vendor"))
 from src.environments import BabaWrapper
@@ -76,7 +77,7 @@ def create_game():
         if "env" in session:
             session["env"].close()
         env = BabaWrapper(
-            env_name="env/baba_custom_ascii_original", max_steps=300, seed=42,
+            env_name="env/baba_custom_ascii_original", max_steps=MAX_STEPS, seed=42,
             env_kwargs={"scenario_type": session["map"]},
         )
         env.reset(seed=42)
@@ -113,7 +114,7 @@ def create_game():
             "aliases": aliases, "steps": len(session["history"]) - 1,
             "canUndo": len(session["history"]) > 1,
             "ended": bool(env.last_terminated or env.last_truncated),
-            "won": bool(env.last_terminated and env.last_reward > 0),
+            "won": bool(env.last_terminated and env.last_reward > 0), "maxSteps": MAX_STEPS,
             "world": world, "versions": list(programs[world]), "program": programs[world][version],
             "comparison": comparison, "example": session["example"], "solution": maps[session["map"]]["solution"],
             "before": transition["before"] if transition else None,
