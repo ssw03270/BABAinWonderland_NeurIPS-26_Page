@@ -20,7 +20,7 @@
   "dynamic_directions": {},
   "inactive_rules": [],
   "target_plan": "",
-  "objective": "Lava burns Baba, and those rules won't budge. Clear a path.",
+  "objective": "Lava burns Baba, and nothing here can cool it. Clear a path.",
   "solution": [
     "up",
     "up",

@@ -11,7 +11,8 @@ from runtime.game import MAP_IDS, PageSandbox, SandboxConfig, create_game
 
 # A map's mechanic shows at a known step of its saved solution: the world-object counts there.
 MECHANICS = {
-    ("pool_of_tears", 2): {"rock": 1, "water": 24},  # a rock sinks with a water cell
+    ("pool_of_tears", 6): {"rock": 0, "water": 13},  # the rock sinks with a water cell
+    ("pool_of_tears", 15): {"water": 12},  # then the PUSH word sinks with the second
     ("golden_key", 4): {"key": 0, "door": 7},  # the key opens a door; both vanish
     ("golden_key", 17): {"rock": 0, "door": 6},  # the rock, a key now too, opens the second row
     ("queen_of_hearts", 8): {"wall": 0, "love": 24},  # WALL IS LOVE turns every wall into a heart
