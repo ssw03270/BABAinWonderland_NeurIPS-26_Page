@@ -197,13 +197,14 @@ function sheetFor(object, world, aliases) {
   }
   return sheets.get(path);
 }
+// Sprite artwork faces right. Only things drawn from the side turn round; a flag or a cog looks the same either way.
+const SIDE_VIEW = new Set(["baba", "keke", "skull", "robot", "bolt"]);
 function drawObject(ctx, object, x, y, world, aliases) {
   const img = sheetFor(object, world, aliases);
   if (!img.complete || !img.naturalWidth) return;
   const sx = (boil % (img.naturalWidth / SPRITE)) * SPRITE;
   ctx.save();
-  // Sprite artwork faces right; horizontal orientation is shown when present.
-  if (object.type === "world_object" && object.direction === "facing left") { ctx.translate(x + TILE, y); ctx.scale(-1, 1); x = 0; y = 0; }
+  if (object.type === "world_object" && object.direction === "facing left" && SIDE_VIEW.has(object.word)) { ctx.translate(x + TILE, y); ctx.scale(-1, 1); x = 0; y = 0; }
   ctx.drawImage(img, sx, 0, SPRITE, SPRITE, x, y, TILE, TILE);
   ctx.restore();
 }
@@ -265,15 +266,8 @@ const youCells = (board) => {
 function drawBoards() {
   if (!game) return;
   const prediction = game.comparison?.[game.world];
-  const objects = [...game.board.objects, ...(prediction?.board?.objects || [])];
   const [width, height] = game.board.grid_size;
-  // The camera takes in both the game's things and the prediction's, so a pick never moves the frame.
-  const xs = objects.map((o) => o.position[0]), ys = objects.map((o) => o.position[1]);
-  const x0 = objects.length ? Math.max(0, Math.min(...xs) - 2) : 0;
-  const y0 = objects.length ? Math.max(0, Math.min(...ys) - 2) : 0;
-  const x1 = objects.length ? Math.min(width - 1, Math.max(...xs) + 2) : width - 1;
-  const y1 = objects.length ? Math.min(height - 1, Math.max(...ys) + 2) : height - 1;
-  const frame = {x0,y0,x1,y1};
+  const frame = {x0: 0, y0: 0, x1: width - 1, y1: height - 1, width, height};  // always the whole map
   // The board shows the picked version's prediction (the game itself before a move, or when the code returns
   // nothing); where the prediction is wrong, marks say how the game really is: nothing drawn over anything.
   const shown = prediction?.board || game.board, diff = prediction?.board ? predictionDiff(game.board, prediction.board) : null;
@@ -339,14 +333,26 @@ function drawDiff(ctx, cell, {lacks, extra, turned}) {
   ctx.restore();
 }
 
-// ``overlay(ctx, cell)`` draws on top; ``cell(x, y)`` is a grid cell's top-left pixel.
-function drawBoard(canvas, board, {x0,y0,x1,y1}, differingCells, world = "default", aliases = {}, overlay = null) {
+// The map's floor is a shade lighter than the panel, so its edge shows. The game shows the whole map; a story's
+// close-up cuts it short, and there the floor fades out rather than end in an edge the map does not have.
+const PANEL = "#101012", FLOOR = "#18181e";
+// ``overlay(ctx, cell)`` draws on top; ``cell(x, y)`` is a grid cell's top-left pixel. ``width`` and ``height`` are
+// the map's.
+function drawBoard(canvas, board, {x0, y0, x1, y1, width: mapWidth, height: mapHeight}, differingCells, world = "default", aliases = {}, overlay = null) {
   const ctx = canvas.getContext("2d");
   const width = (x1 - x0 + 1) * TILE, height = (y1 - y0 + 1) * TILE;
   if (canvas.width !== width || canvas.height !== height) { canvas.width = width; canvas.height = height; }
   const cell = (x, y) => [(x - x0) * TILE, (y - y0) * TILE];
   ctx.imageSmoothingEnabled = false;
-  ctx.fillStyle = "#101012"; ctx.fillRect(0, 0, width, height);
+  ctx.fillStyle = FLOOR; ctx.fillRect(0, 0, width, height);
+  const sides = [[x0 === 0, [0, 0, TILE / 2, 0]], [x1 === mapWidth - 1, [width, 0, width - TILE / 2, 0]], [y0 === 0, [0, 0, 0, TILE / 2]],
+    [y1 === mapHeight - 1, [0, height, 0, height - TILE / 2]]];
+  for (const [edge, [ax, ay, bx, by]] of sides) {
+    if (edge) continue;
+    const fade = ctx.createLinearGradient(ax, ay, bx, by);
+    fade.addColorStop(0, PANEL); fade.addColorStop(1, "rgba(16, 16, 18, 0)");
+    ctx.fillStyle = fade; ctx.fillRect(Math.min(ax, bx), Math.min(ay, by), Math.abs(bx - ax) || width, Math.abs(by - ay) || height);
+  }
   // Floor first, rule words last; what is YOU above the other things, so a wrong prediction that puts it inside a wall
   // still shows it.
   const you = youWords(board);
@@ -441,7 +447,7 @@ async function renderExamples() {
         return [a, b];
       };
       const [x0, x1] = span(Math.min(...xs), Math.max(...xs), width), [y0, y1] = span(Math.min(...ys), Math.max(...ys), height);
-      const frame = {x0, y0, x1, y1};
+      const frame = {x0, y0, x1, y1, width, height};
       const shots = {
         before: [example.before, [], marks.arrow(example.before, example.action)],
         failed: [example.failed.board, [], marks.wrong(example.actual, example.failed.board)],
@@ -567,6 +573,8 @@ function renderCode() {
   $("program-source").replaceChildren(...rows.map(({text, line, kind, name, fresh}) => {
     const span = el("span", kind ? `source-line ${kind}` : "source-line", text || " ");
     if (line) span.dataset.line = line;
+    const indent = (text || "").length - (text || "").trimStart().length;  // a wrapped line continues past its own indent
+    if (indent) span.style.setProperty("--indent", `${indent}ch`);
     if (kind === "function") { span.dataset.fn = name; if (fresh) span.append(el("b", "", "new")); }
     return span;
   }));
