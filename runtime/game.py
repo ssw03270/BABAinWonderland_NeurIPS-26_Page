@@ -5,9 +5,12 @@ from copy import deepcopy
 from difflib import unified_diff
 from hashlib import sha256
 import json
+import marshal
+import math
 from pathlib import Path
 import sys
 import time
+import types
 
 ROOT = Path(__file__).resolve().parents[1]
 MAP_ID = "make_a_way"
@@ -19,25 +22,52 @@ EXAMPLE_MOVES = {"movement": ["right"], "push": ["right"] * 3, "wall": ["up"]}  
 sys.path.insert(0, str(ROOT / "runtime/vendor"))
 from src.environments import BabaWrapper
 from src.program_model.sandbox import PreparedSourceResult, ProgramSandbox, SandboxConfig
-from src.program_model.predictor import ProgramWorldModelPredictor
-from src.program_model.state_codec import normalize_state_payload, states_equivalent
+from src.program_model.predictor import _clone_plain_structure
+from src.program_model.state_codec import dump_state_json, normalize_state_payload, states_equivalent
+
+
+MONITORING = getattr(sys, "monitoring", None)  # Python 3.12+, as in the browser
 
 
 class PageSandbox(ProgramSandbox):
     """The research sandbox, cheaper in the browser in two ways. Its guard: the time limit is checked whenever the code
     calls a function, not on every line, since a per-line tracer makes every prediction several times slower in the
-    browser. A prediction that runs past the limit still stops, at its next call; lines are not counted. And a program
-    is compiled straight from its source: with static validation off, as here, the research sandbox compiles
-    ``ast.parse(source)``, which gives the same code object at about twice the cost."""
+    browser. A prediction that runs past the limit still stops, at its next call; lines are not counted.
+    Where Python has sys.monitoring (3.12+, as in the browser), it runs the check as the programs' own functions start
+    or resume, and no other code is watched. A call tracer (older Pythons) runs as often, but under Python 3.12 it also
+    slows every line of all code while it is set: the saved programs took about twice as long with it.
+    And a program is compiled straight from its source: with static validation off, as here, the research sandbox
+    compiles ``ast.parse(source)``, which gives the same code object at about twice the cost."""
+
+    TOOL = 3  # the guard's sys.monitoring tool id, one no standard tool claims (debugger 0, coverage 1, profiler 2, optimizer 5)
+    deadline, limit = math.inf, 0.0  # while a prediction runs: the time it must end by, and its limit
+
+    @classmethod
+    def check_time(cls, code, offset):  # noqa: ARG003 (a watched function starts or resumes)
+        if time.perf_counter() > cls.deadline:
+            raise TimeoutError(f"Execution timeout exceeded: over {cls.limit:.1f}s")
 
     def _prepare_source(self, source):
         try:
-            return PreparedSourceResult(success=True, code_obj=compile(source, "<program_model>", "exec", dont_inherit=True))
+            prepared = PreparedSourceResult(success=True, code_obj=compile(source, "<program_model>", "exec", dont_inherit=True))
         except SyntaxError:
-            return super()._prepare_source(source)  # (the research sandbox's report of the error)
+            prepared = super()._prepare_source(source)  # (the research sandbox's report of the error)
+        if MONITORING and prepared.success:  # watch the program's code and every function, lambda and generator in it
+            codes = [prepared.code_obj]
+            while codes:
+                code = codes.pop()
+                MONITORING.set_local_events(self.TOOL, code, MONITORING.events.PY_START | MONITORING.events.PY_RESUME)
+                codes.extend(const for const in code.co_consts if isinstance(const, types.CodeType))
+        return prepared
 
     def _run_with_limits(self, fn):
         limit = self.config.timeout_ms / 1000.0
+        if MONITORING:
+            PageSandbox.limit, PageSandbox.deadline = limit, time.perf_counter() + limit
+            try:
+                return fn(), 0
+            finally:
+                PageSandbox.deadline = math.inf
         start = time.perf_counter()
 
         def guard(frame, event, arg):  # noqa: ANN001, ANN202 (a call: no tracer for its lines)
@@ -50,6 +80,73 @@ class PageSandbox(ProgramSandbox):
             return fn(), 0
         finally:
             sys.settrace(previous)
+
+
+if MONITORING:
+    if MONITORING.get_tool(PageSandbox.TOOL) != "page time guard":
+        MONITORING.use_tool_id(PageSandbox.TOOL, "page time guard")
+    for event in (MONITORING.events.PY_START, MONITORING.events.PY_RESUME):
+        MONITORING.register_callback(PageSandbox.TOOL, event, PageSandbox.check_time)
+
+# state_schema's canonical token of an object: json.dumps(obj, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+# builds this C encoder for each call; here it is built once. It skips json.dumps's check for cycles and its error for
+# values JSON cannot hold, since every object judged is plain data: the simulator's state, or a prediction the sandbox
+# has just serialized whole.
+_encode = json.encoder.c_make_encoder(None, None, json.encoder.encode_basestring, None, ":", ",", True, False, True)
+
+
+def canonical_token(obj):
+    return "".join(_encode(obj, 0))
+
+
+def plain(output):
+    """A program's output as the research predictor judges it: its plain copy (_clone_plain_structure), made only when
+    it would differ. marshal accepts the built-in types themselves and no subclass of them, so an output it accepts
+    already reads exactly as its plain copy would, type for type and value for value."""
+    try:
+        marshal.dumps(output)
+    except ValueError:
+        return _clone_plain_structure(output)
+    return output
+
+
+class NextState:
+    """A move's actual next state, as one world's code sees it, ready to judge every version's prediction of it.
+    matches(prediction, text) is states_equivalent(state, prediction), which compares the states' object lists as
+    multisets of the objects' canonical JSON. Here the state's own side of that is computed once, not once per
+    prediction, and a prediction whose canonical JSON (``text``, which the sandbox writes anyway) is the state's has
+    the same objects in the same order, so its side is not needed either (over half the right predictions)."""
+
+    def __init__(self, state):
+        self.state = state
+        self.text = dump_state_json(state)
+        objects = state.get("objects")
+        unordered = type(objects) is list and all(isinstance(obj, dict) for obj in objects)
+        self.tokens = Counter(map(canonical_token, objects)) if unordered else None
+
+    def matches(self, predicted, text):
+        state = self.state
+        if type(predicted) is not dict or predicted.keys() != state.keys():
+            return False
+        for key, value in state.items():
+            guess = predicted[key]
+            if key == "objects" and self.tokens is not None and type(guess) is list and all(isinstance(obj, dict) for obj in guess):
+                if text != self.text and (len(guess) != len(value) or Counter(map(canonical_token, guess)) != self.tokens):
+                    return False
+            elif not states_equivalent(value, guess, path=f"$.{key}"):
+                return False
+        return True
+
+
+class Move:
+    """One move of an attempt: the state before it, its action and the state after it, with what judging it takes,
+    worked out once: each world's view of it and each version's verdict on it."""
+
+    __slots__ = ("before", "action", "after", "views", "verdicts")
+
+    def __init__(self, before, action, after):
+        self.before, self.action, self.after = before, action, after
+        self.views, self.verdicts = {}, {}
 
 
 def create_game():
@@ -67,14 +164,13 @@ def create_game():
     sandbox = PageSandbox(SandboxConfig(timeout_ms=1500))
 
     def model(world, version):
-        """The version's program, compiled."""
+        """The version's program, compiled: its namespace in the research sandbox."""
         if version not in models[world]:
             source = paths[world][version].read_text(encoding="utf-8")
             compiled = sandbox.compile_source(source)
             if not compiled.success:
                 raise ValueError(f"Cannot compile {world}/{version}.py: {compiled.errors[0].message}")
-            models[world][version] = ProgramWorldModelPredictor(sandbox)
-            models[world][version].set_compiled_program(source, compiled.namespace)
+            models[world][version] = compiled.namespace
         return models[world][version]
 
     def program(world, version):
@@ -118,14 +214,14 @@ def create_game():
             env_kwargs={"scenario_type": session["map"]},
         )
         env.reset(seed=42)
-        session.update(env=env, history=[env.snapshot()], transitions=[None], example=None, trail={})
+        session.update(env=env, history=[env.snapshot()], transitions=[None], example=None)
 
     def advance(session, action):
         env = session["env"]
-        before = deepcopy(env.get_visualization_state())
+        before = env.get_visualization_state()  # (a new copy on every call)
         env.step({"idle": 0, "up": 1, "right": 2, "down": 3, "left": 4}[action])
         session["history"].append(env.snapshot())
-        session["transitions"].append({"before": before, "action": action})
+        session["transitions"].append(Move(before, action, env.get_visualization_state()))
 
     def show_example(session, example):
         session["map"] = MAP_ID
@@ -138,12 +234,11 @@ def create_game():
         env = session["env"]
         world = session["world"]
         version = session["selected_versions"][world]
-        transition = session["transitions"][-1]
+        move = session["transitions"][-1]
         comparison = None
-        if transition:
+        if move:
             # Version changes replay the identical pre-action state, never the outcome.
-            result = model(world, version).predict(as_seen(transition["before"], world), transition["action"])
-            comparison = {"action": transition["action"], world: compare_prediction(result, env.get_visualization_state(), world)}
+            comparison = {"action": move.action, world: compare_prediction(move, world, version)}
         return {
             "board": env.get_visualization_state(), "map": session["map"],
             "maps": [{"id": name, "label": spec["display_name"]} for name, spec in maps.items()],
@@ -154,40 +249,48 @@ def create_game():
             "won": bool(env.last_terminated and env.last_reward > 0), "maxSteps": MAX_STEPS,
             "world": world, "versions": list(paths[world]), "program": program(world, version),
             "comparison": comparison, "example": session["example"], "solution": maps[session["map"]]["solution"],
-            "before": transition["before"] if transition else None,
+            "before": move.before if move else None,
         }
 
     def trail(session):
-        """Every move so far: its action, and whether the selected version of the code predicted it right. A move's
-        verdict never changes, so each version's are kept and only new moves are predicted (undone ones are dropped)."""
+        """Every move so far: its action, and whether the selected version of the code predicted it right. A move keeps
+        its verdicts, so a version is run only on moves it has not judged yet."""
         world = session["world"]
-        moves = session["transitions"][1:]
-        known = session["trail"].setdefault((world, session["selected_versions"][world]), [])
-        del known[len(moves):]
-        predictor = model(world, session["selected_versions"][world])
-        for k in range(len(known), len(moves)):
-            after = moves[k + 1]["before"] if k + 1 < len(moves) else session["env"].get_visualization_state()
-            known.append(predicts_right(predictor, as_seen(moves[k]["before"], world), moves[k]["action"], as_seen(after, world)))
-        return [{"action": move["action"], "match": match} for move, match in zip(moves, known)]
+        version = session["selected_versions"][world]
+        return [{"action": move.action, "match": verdict(move, world, version)} for move in session["transitions"][1:]]
 
     def verdicts(session):
         """For the last move, whether each saved version of the current world's code predicts it right."""
-        transition = session["transitions"][-1]
-        if not transition:
+        move = session["transitions"][-1]
+        if not move:
             return []
         world = session["world"]
-        state, expected = as_seen(transition["before"], world), as_seen(session["env"].get_visualization_state(), world)
-        return [{"version": version, "match": predicts_right(model(world, version), state, transition["action"], expected)}
-                for version in paths[world]]
+        return [{"version": version, "match": verdict(move, world, version)} for version in paths[world]]
 
     def as_seen(state, world):
         """A state as the world's code sees it: in Wonderland, its property words renamed."""
         return remap_properties(state, aliases) if world == "wonderland" else state
 
-    def predicts_right(model, state, action, expected):
-        """Whether ``model`` predicts the move right: the comparison's verdict alone, without its cells or display."""
-        result = model.predict(state, action)
-        return result.success and states_equivalent(expected, normalize_state_payload(result.predicted_state_obj))
+    def view(move, world):
+        """The move as a world's code sees it: the state before, marshalled, and the state after, ready to judge. The
+        state before is a new tree of dicts, lists, strings, integers and booleans, so each copy marshal makes of it
+        for a version is the plain copy the research predictor gives the code (_clone_plain_structure), made in C."""
+        if world not in move.views:
+            move.views[world] = marshal.dumps(as_seen(move.before, world)), NextState(as_seen(move.after, world))
+        return move.views[world]
+
+    def run(move, world, version):
+        """A version's code on the move, on its own copy of the state before, in the research sandbox."""
+        return sandbox.execute_predict(model(world, version), marshal.loads(view(move, world)[0]), move.action)
+
+    def verdict(move, world, version):
+        """Whether a version predicts a move right: its comparison's verdict alone, without its cells or display."""
+        key = world, version
+        if key not in move.verdicts:
+            executed = run(move, world, version)
+            move.verdicts[key] = executed.success and view(move, world)[1].matches(
+                normalize_state_payload(plain(executed.output_state)), executed.output_state_json)
+        return move.verdicts[key]
 
     def remap_properties(state, mapping):
         mapped = deepcopy(state)
@@ -196,19 +299,22 @@ def create_game():
                 obj["word"] = mapping.get(obj["word"], obj["word"])
         return mapped
 
-    def compare_prediction(result, actual, world):
-        if not result.success:
-            return {"error": result.error.message, "board": None, "match": False, "cells": []}
-        predicted = normalize_state_payload(result.predicted_state_obj)
-        expected = as_seen(actual, world)
+    def compare_prediction(move, world, version):
+        executed = run(move, world, version)
+        if not executed.success:
+            move.verdicts[world, version] = False
+            return {"error": executed.errors[0].message, "board": None, "match": False, "cells": []}
+        predicted = normalize_state_payload(_clone_plain_structure(executed.output_state))
+        after = view(move, world)[1]
+        match = move.verdicts[world, version] = after.matches(predicted, executed.output_state_json)
         display = remap_properties(predicted, reverse_aliases) if world == "wonderland" else predicted
-        actual_objects = Counter(json.dumps(obj, sort_keys=True) for obj in actual["objects"])
+        actual_objects = Counter(json.dumps(obj, sort_keys=True) for obj in move.after["objects"])
         predicted_objects = Counter(json.dumps(obj, sort_keys=True) for obj in display["objects"])
         differing = (actual_objects - predicted_objects) + (predicted_objects - actual_objects)
         cells = sorted({tuple(json.loads(obj)["position"]) for obj in differing})
         return {
-            "board": display, "match": states_equivalent(expected, predicted),
-            "cells": cells, "terminationMatch": expected["step"] == predicted.get("step"),
+            "board": display, "match": match,
+            "cells": cells, "terminationMatch": after.state["step"] == predicted.get("step"),
             "error": None,
         }
 

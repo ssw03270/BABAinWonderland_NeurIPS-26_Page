@@ -7,7 +7,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from runtime.game import MAP_IDS, create_game
+from runtime.game import MAP_IDS, PageSandbox, SandboxConfig, create_game
 
 # A map's mechanic shows at a known step of its saved solution: the world-object counts there.
 MECHANICS = {
@@ -101,6 +101,21 @@ def verify():
     except ValueError:
         pass
     assert game()["board"] == state["board"] and game()["map"] == state["map"]
+    # A move's mark in the record is the picked version's verdict on that move, also for a move made after an undo.
+    game("/world", {"world": "default"})
+    game("/version", {"version": "v002"})
+    game("/reset")
+    game("/action", {"action": "right"})
+    assert game("/trail")["trail"] == [{"action": "right", "match": True}]
+    game("/undo")
+    game("/action", {"action": "up"})  # the wall bump v002 gets wrong
+    assert game("/trail")["trail"] == [{"action": "up", "match": False}]
+    assert {"version": "v002", "match": False} in game("/verdicts")["verdicts"]
+    # The time guard stops a runaway program at its next call.
+    sandbox = PageSandbox(SandboxConfig(timeout_ms=200))
+    runaway = sandbox.compile_source("def step(x):\n    return x + 1\n\ndef predict_next_state(state, action):\n    x = 0\n    while True:\n        x = step(x)\n")
+    result = sandbox.execute_predict(runaway.namespace, {}, "idle")
+    assert not result.success and result.errors[0].message == "Execution timeout exceeded: over 0.2s"
     provenance = json.loads((ROOT / "runtime/provenance.json").read_text())
     for name, expected in provenance["original_sha256"].items():
         if name.startswith("programs/"):
@@ -109,7 +124,7 @@ def verify():
         filename = getattr(module, "__file__", None)
         if filename and (module.__name__ == "src" or module.__name__.startswith(("src.", "baba_in_wonderland"))):
             assert Path(filename).resolve().is_relative_to(ROOT / "runtime/vendor"), filename
-    return f"PASS: {checks} original-runtime comparisons; {len(MAP_IDS)} puzzles in both worlds; sink, open/shut, transformation, and float; map switching; static examples; 73 original program hashes; undo; no sibling imports"
+    return f"PASS: {checks} original-runtime comparisons; {len(MAP_IDS)} puzzles in both worlds; sink, open/shut, transformation, and float; map switching; static examples; 73 original program hashes; undo; the record after an undo; the time guard; no sibling imports"
 
 
 if __name__ == "__main__":
