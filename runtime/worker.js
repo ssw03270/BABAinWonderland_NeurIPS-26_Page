@@ -3,7 +3,7 @@ const ready = (async () => {
   // Python with NumPy (the only package the game needs) and the game files download side by side.
   const [pyodide, bundle] = await Promise.all([
     import("https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.mjs").then(({loadPyodide}) => loadPyodide({packages:["numpy"]})),
-    fetch(new URL("./bundle.zip?v=1736c34e831c", import.meta.url)).then((response) => {
+    fetch(new URL("./bundle.zip?v=9e035e868e9c", import.meta.url)).then((response) => {
       if (!response.ok) throw new Error("The game files could not be downloaded.");
       return response.arrayBuffer();
     }),

@@ -26,7 +26,7 @@ Visitors do **not** need Python, the research checkout, a Downloads folder, an A
 | `data/maps/*.json` | The 11 puzzles: layout, short objective, verified solution; the menu order is `MAP_IDS` in `runtime/game.py` |
 | `data/aliases.json` | Wonderland property vocabulary from the experiment configuration |
 | `data/examples.json` | Original simulator outputs used for the two fixed comparisons |
-| `assets/` | Original game sprites (as boiling sprite sheets), the method clips and result cards rendered from the promo video's code, the ALFWorld clip, and the video thumbnail |
+| `assets/` | Original game sprites as boiling sheets, with the game's own variants: walls, water and lava joining their own kind and the map's edge, the facings of skulls, crabs and bolts (they start facing the viewer), characters' walking frames, and turning cogs; the method clips and result cards rendered from the promo video's code, the ALFWorld clip, and the video thumbnail |
 | `runtime/game.py` | Map/session management and one-step prediction comparison |
 | `runtime/vendor/` | Required simulator, serialization, and sandbox modules from the research repository |
 | `runtime/wheels/` | Bundled Gym 0.25.2, gym-notices 0.0.8, and cloudpickle 3.1.1 wheels |

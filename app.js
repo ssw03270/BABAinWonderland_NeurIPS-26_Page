@@ -154,7 +154,7 @@ $("result-tables").replaceChildren(
 );
 
 const canvas = $("game-canvas");
-const runtime = new Worker(new URL("runtime/worker.js?v=70063d9d1049", document.baseURI), {type:"module"});
+const runtime = new Worker(new URL("runtime/worker.js?v=220748cbf413", document.baseURI), {type:"module"});
 const pendingRequests = new Map();
 let requestId = 0, runtimeError = null;
 runtime.addEventListener("message", ({data}) => {
@@ -183,12 +183,13 @@ let verdicts = new Map(), showGuess = false;  // showGuess: the picked version's
 let autoRunning = false, autoPaused = false, autoTimer = null;
 // Sprites boil like the game's: every sprite is a sheet of its frames (assets/sprites/*/NAME.png, the Wonderland
 // words included), and one clock picks the frame for all of them.
-const SPRITE = 24, TILE = 48, BOIL_MS = 150;
+const SPRITE = 24, TILE = 48, BOIL_MS = 150, ICON_SHEETS = "game-variants-1";
 let boil = 0;
 const sheets = new Map();
 function sheetFor(object, world, aliases) {
   const alias = world === "wonderland" && object.type === "rule_property" ? aliases[object.word] : null;
-  const path = `assets/sprites/${object.type === "world_object" ? "icon" : "text"}/${(alias || object.word).toUpperCase()}.png`;
+  // (the object sheets' version: bump it when they are rebuilt, so no browser keeps an older layout of rows)
+  const path = object.type === "world_object" ? `assets/sprites/icon/${object.word.toUpperCase()}.png?v=${ICON_SHEETS}` : `assets/sprites/text/${(alias || object.word).toUpperCase()}.png`;
   if (!sheets.has(path)) {
     const img = new Image();
     img.onload = drawAll;
@@ -197,16 +198,44 @@ function sheetFor(object, world, aliases) {
   }
   return sheets.get(path);
 }
-// Sprite artwork faces right. Only things drawn from the side turn round; a flag or a cog looks the same either way.
-const SIDE_VIEW = new Set(["baba", "keke", "skull", "robot", "bolt"]);
-function drawObject(ctx, object, x, y, world, aliases) {
+// A thing's sheet has the game's own variants down its rows (its three boil frames across), by the game's kinds:
+// things that join up with their own kind and with the map's edge (16 rows: right 1 + up 2 + left 4 + down 8), things
+// drawn facing a way (right, up, left, down), characters (each facing's four walking frames, a frame a cell), things
+// animated a frame a turn, and things drawn one way only (one row).
+const JOINED = new Set(["wall", "water", "lava", "grass", "hedge", "brick", "ice", "pipe", "bog"]);
+const FACING = new Set(["skull", "crab", "bolt"]), CHARACTERS = new Set(["baba", "keke", "robot"]), TURNING = new Set(["cog", "bubble"]);
+const FACE_ROW = {"facing right": 0, "facing up": 1, "facing left": 2, "facing down": 3};
+function spriteRow(object, joins, walk) {
+  if (object.type !== "world_object") return 0;
+  const {word, direction} = object, face = FACE_ROW[direction] ?? 0;
+  if (JOINED.has(word)) return joins ? joins(object) : 0;
+  if (FACING.has(word)) return face;
+  if (CHARACTERS.has(word)) return face * 4 + (walk ? walk(object) : 0);
+  if (TURNING.has(word)) return (game?.steps ?? 0) & 3;
+  return 0;
+}
+// Characters stand at their first walking frame when a map starts and step to the next frame with every cell they
+// move, as in the game: the frame of each character, by where it stands.
+let walkFrames = new Map();
+function stepWalkFrames(before, after) {
+  const key = (o) => `${o.word}@${o.position}`, stood = new Set((before?.objects || []).map(key)), next = new Map();
+  for (const o of after.objects) {
+    if (o.type !== "world_object" || !CHARACTERS.has(o.word)) continue;
+    if (stood.has(key(o))) { next.set(key(o), walkFrames.get(key(o)) ?? 0); continue; }
+    const [dx, dy] = FACE[o.direction] || [0, 0];
+    next.set(key(o), ((walkFrames.get(`${o.word}@${o.position[0] - dx},${o.position[1] - dy}`) ?? 0) + 1) & 3);
+  }
+  walkFrames = next;
+}
+const walkFrame = (o) => walkFrames.get(`${o.word}@${o.position}`) ?? 0;
+// ``joins(object)``: which neighbours a joining thing connects to on the board it is drawn on; ``walk(object)``: a
+// character's walking frame.
+function drawObject(ctx, object, x, y, world, aliases, joins = null, walk = null) {
   const img = sheetFor(object, world, aliases);
   if (!img.complete || !img.naturalWidth) return;
   const sx = (boil % (img.naturalWidth / SPRITE)) * SPRITE;
-  ctx.save();
-  if (object.type === "world_object" && object.direction === "facing left" && SIDE_VIEW.has(object.word)) { ctx.translate(x + TILE, y); ctx.scale(-1, 1); x = 0; y = 0; }
-  ctx.drawImage(img, sx, 0, SPRITE, SPRITE, x, y, TILE, TILE);
-  ctx.restore();
+  const sy = Math.min(spriteRow(object, joins, walk), img.naturalHeight / SPRITE - 1) * SPRITE;
+  ctx.drawImage(img, sx, sy, SPRITE, SPRITE, x, y, TILE, TILE);
 }
 const exampleDrawers = [];
 function drawAll() {
@@ -275,7 +304,7 @@ function drawBoards() {
   drawBoard(canvas, shown, frame, [], game.world, game.aliases, (ctx, cell) => {
     if (diff) drawDiff(ctx, cell, diff);
     effectsOn("game")(ctx, cell);
-  });
+  }, walkFrame);
 }
 // What a prediction gets wrong, thing by thing: of each kind of thing, the places only the game has (things the
 // prediction lacks) and the places only the prediction has (things the game does not have); and of the things it puts
@@ -339,7 +368,7 @@ function drawDiff(ctx, cell, {lacks, extra, turned}) {
 const PANEL = "#101012", FLOOR = "#18181e";
 // ``overlay(ctx, cell)`` draws on top; ``cell(x, y)`` is a grid cell's top-left pixel. ``width`` and ``height`` are
 // the map's.
-function drawBoard(canvas, board, {x0, y0, x1, y1, width: mapWidth, height: mapHeight}, differingCells, world = "default", aliases = {}, overlay = null) {
+function drawBoard(canvas, board, {x0, y0, x1, y1, width: mapWidth, height: mapHeight}, differingCells, world = "default", aliases = {}, overlay = null, walk = null) {
   const ctx = canvas.getContext("2d");
   const width = (x1 - x0 + 1) * TILE, height = (y1 - y0 + 1) * TILE;
   if (canvas.width !== width || canvas.height !== height) { canvas.width = width; canvas.height = height; }
@@ -358,7 +387,12 @@ function drawBoard(canvas, board, {x0, y0, x1, y1, width: mapWidth, height: mapH
   // still shows it.
   const you = youWords(board);
   const layer = (o) => o.word === "tile" ? -1 : o.type !== "world_object" ? 2 : you.has(o.word) ? 1 : 0;
-  for (const object of [...board.objects].sort((a, b) => layer(a) - layer(b))) drawObject(ctx, object, ...cell(...object.position), world, aliases);
+  const here = new Set(board.objects.filter((o) => o.type === "world_object").map((o) => `${o.word}@${o.position}`));
+  const joins = ({word, position: [x, y]}) => [[1, 0, 1], [0, -1, 2], [-1, 0, 4], [0, 1, 8]].reduce((mask, [dx, dy, bit]) => {
+    const [nx, ny] = [x + dx, y + dy];
+    return nx < 0 || ny < 0 || nx >= mapWidth || ny >= mapHeight || here.has(`${word}@${nx},${ny}`) ? mask | bit : mask;
+  }, 0);
+  for (const object of [...board.objects].sort((a, b) => layer(a) - layer(b))) drawObject(ctx, object, ...cell(...object.position), world, aliases, joins, walk);
   overlay?.(ctx, cell);
   ctx.strokeStyle = "#ff5b62"; ctx.lineWidth = 3; ctx.setLineDash([6, 4]);
   for (const [x, y] of differingCells) { const [px, py] = cell(x, y); ctx.strokeRect(px + 2, py + 2, TILE - 4, TILE - 4); }
@@ -801,6 +835,8 @@ async function gameRequest(path = "", body) {
       showGuess = false;
       verdicts = new Map(judged.map(({version, match}) => [version, match]));
     }
+    if (["/action", "/undo"].includes(path)) stepWalkFrames(before?.board, next.board);
+    else if (path === "/reset" || !before) walkFrames = new Map();  // a new start: everyone stands
     game = next; renderGame();
     if (path === "/action") {
       addEffects("game", "puff", destroyed(before.board, game.board));
@@ -1009,7 +1045,7 @@ document.addEventListener("keydown", (event) => {
     ctx.save();
     ctx.translate(bx + TILE / 2, by + TILE - lift);
     ctx.scale(1 + squash, 1 - squash);
-    drawObject(ctx, to[BABA], -TILE / 2, -TILE, "default", {});
+    drawObject(ctx, to[BABA], -TILE / 2, -TILE, "default", {}, null, () => (k + 1) & 3);  // a walking frame a step
     ctx.restore();
     effectsOn("hero")(ctx, cell);
     ctx.globalAlpha = 1;

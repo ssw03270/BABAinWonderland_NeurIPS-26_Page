@@ -7,7 +7,7 @@
 const button = document.getElementById("verify"), result = document.getElementById("result");
 button.onclick = () => {
   button.disabled = true; result.textContent = "Loading the browser runtime…";
-  const worker = new Worker("../runtime/worker.js?v=70063d9d1049", {type:"module"});
+  const worker = new Worker("../runtime/worker.js?v=220748cbf413", {type:"module"});
   worker.onmessage = ({data}) => {
     result.textContent = data.status || data.error || data.result;
     if (!data.status) { worker.terminate(); button.disabled = false; }
