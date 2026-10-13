@@ -154,7 +154,7 @@ $("result-tables").replaceChildren(
 );
 
 const canvas = $("game-canvas");
-const runtime = new Worker(new URL("runtime/worker.js?v=220748cbf413", document.baseURI), {type:"module"});
+const runtime = new Worker(new URL("runtime/worker.js?v=843664a8cc55", document.baseURI), {type:"module"});
 const pendingRequests = new Map();
 let requestId = 0, runtimeError = null;
 runtime.addEventListener("message", ({data}) => {
