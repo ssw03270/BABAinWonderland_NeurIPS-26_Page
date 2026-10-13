@@ -205,6 +205,10 @@ function sheetFor(object, world, aliases) {
 const JOINED = new Set(["wall", "water", "lava", "grass", "hedge", "brick", "ice", "pipe", "bog"]);
 const FACING = new Set(["skull", "crab", "bolt"]), CHARACTERS = new Set(["baba", "keke", "robot"]), TURNING = new Set(["cog", "bubble"]);
 const FACE_ROW = {"facing right": 0, "facing up": 1, "facing left": 2, "facing down": 3};
+// The game's drawing layer for each thing (its editor object list); words are 20, above every thing.
+const LAYER = {water: 2, lava: 2, bog: 2, tile: 4, ice: 9, brick: 10, grass: 10, flower: 12, bubble: 12, wall: 14, hedge: 14,
+  pipe: 14, algae: 15, door: 15, bolt: 16, cog: 16, key: 16, love: 16, pillar: 16, reed: 16, rock: 16, star: 16, crab: 17,
+  flag: 17, jelly: 17, robot: 17, skull: 17, baba: 18, keke: 18};
 function spriteRow(object, joins, walk) {
   if (object.type !== "world_object") return 0;
   const {word, direction} = object, face = FACE_ROW[direction] ?? 0;
@@ -383,10 +387,10 @@ function drawBoard(canvas, board, {x0, y0, x1, y1, width: mapWidth, height: mapH
     fade.addColorStop(0, PANEL); fade.addColorStop(1, "rgba(16, 16, 18, 0)");
     ctx.fillStyle = fade; ctx.fillRect(Math.min(ax, bx), Math.min(ay, by), Math.abs(bx - ax) || width, Math.abs(by - ay) || height);
   }
-  // Floor first, rule words last; what is YOU above the other things, so a wrong prediction that puts it inside a wall
-  // still shows it.
+  // The game's layers: water lowest, words highest; within a layer, the cell's own order (what arrived last on top).
+  // What is YOU goes above the other things, so a wrong prediction that puts it inside a thing still shows it.
   const you = youWords(board);
-  const layer = (o) => o.word === "tile" ? -1 : o.type !== "world_object" ? 2 : you.has(o.word) ? 1 : 0;
+  const layer = (o) => o.type !== "world_object" ? 20 : you.has(o.word) ? 19 : LAYER[o.word];
   const here = new Set(board.objects.filter((o) => o.type === "world_object").map((o) => `${o.word}@${o.position}`));
   const joins = ({word, position: [x, y]}) => [[1, 0, 1], [0, -1, 2], [-1, 0, 4], [0, 1, 8]].reduce((mask, [dx, dy, bit]) => {
     const [nx, ny] = [x + dx, y + dy];
