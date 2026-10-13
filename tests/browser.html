@@ -1,13 +1,13 @@
 <!doctype html>
 <html lang="en"><meta charset="utf-8"><title>Browser runtime verification</title>
 <h1>Browser runtime verification</h1>
-<p>Checks all twelve maps against 868 reference outputs, their solutions in both worlds, puzzle mechanics, map switching, comparison images, all 74 program hashes, and undo behavior.</p>
+<p>Checks all thirteen maps against 914 reference outputs, their solutions in both worlds, puzzle mechanics, map switching, comparison images, all 74 program hashes, and undo behavior.</p>
 <button id="verify">Run verification</button><pre id="result" role="status">Ready</pre>
 <script type="module">
 const button = document.getElementById("verify"), result = document.getElementById("result");
 button.onclick = () => {
   button.disabled = true; result.textContent = "Loading the browser runtime…";
-  const worker = new Worker("../runtime/worker.js?v=cc9e478702c3", {type:"module"});
+  const worker = new Worker("../runtime/worker.js?v=db4fe7ecd6f7", {type:"module"});
   worker.onmessage = ({data}) => {
     result.textContent = data.status || data.error || data.result;
     if (!data.status) { worker.terminate(); button.disabled = false; }

@@ -11,11 +11,12 @@ from runtime.game import MAP_IDS, PageSandbox, SandboxConfig, create_game
 
 # A map's mechanic shows at a known step of its saved solution: the world-object counts there.
 MECHANICS = {
-    ("pool_of_tears", 10): {"rock": 0, "water": 19},  # the rock fills one cell of the channel
-    ("pool_of_tears", 21): {"water": 18},  # the PUSH word fills the other
+    ("pool_of_tears", 19): {"rock": 0, "water": 22},  # once WATER IS STOP is broken, the rock fills a cell of the flag's row
+    ("pool_of_tears", 35): {"water": 21},  # the STOP word fills the next
+    ("pool_of_tears", 37): {"water": 20},  # and the PUSH word the last
     ("lobster_quadrille", 31): {"crab": 0},  # CRAB IS YOU: crabs that are YOU and DEFEAT destroy themselves
-    ("cheshire_cat", 44): {"jelly": 1},  # a melting jelly pushed into the lava
-    ("cheshire_cat", 45): {"jelly": 0},
+    ("cheshire_cat", 25): {"jelly": 10},  # a melting jelly pushed into the lava
+    ("cheshire_cat", 26): {"jelly": 9},
     ("golden_key", 18): {"door": 0},  # DOOR IS OPEN while SHUT: the cupboard destroys itself
     ("golden_key", 45): {"key": 0, "wall": 7},  # the OPEN key breaks into the SHUT garden wall
     ("queen_of_hearts", 16): {"rock": 0, "love": 1},  # breaking ROCK IS ROCK lets ROCK IS BABA turn the rocks

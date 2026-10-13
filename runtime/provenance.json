@@ -122,7 +122,7 @@
     {
       "id": "pool_of_tears",
       "origin": "New project-page layout playing the role of original level 4 Out Of Reach: the first sinking, with too few sinkers; not a copy of its layout, and not a paper evaluation map.",
-      "solution_steps": 25
+      "solution_steps": 39
     },
     {
       "id": "lobster_quadrille",
@@ -132,11 +132,16 @@
     {
       "id": "cheshire_cat",
       "origin": "New project-page layout playing the role of original level 6 Volcano: a hazard used, not removed; not a copy of its layout, and not a paper evaluation map.",
-      "solution_steps": 45
+      "solution_steps": 26
+    },
+    {
+      "id": "lobster_errand",
+      "origin": "New project-page layout playing the role of original level 11 Affection: MOVE, here as a courier (the idea of 36 Wireless Connection); not a copy of its layout, and not a paper evaluation map.",
+      "solution_steps": 27
     },
     {
       "id": "white_rabbit",
-      "origin": "New project-page layout playing the role of original level 11 Affection: MOVE; not a copy of its layout, and not a paper evaluation map.",
+      "origin": "New project-page layout playing the role of original level 11 Affection: MOVE, on Baba; not a copy of its layout, and not a paper evaluation map.",
       "solution_steps": 23
     },
     {
