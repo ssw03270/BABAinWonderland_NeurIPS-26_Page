@@ -107,19 +107,69 @@
   ],
   "demo_maps": [
     {
-      "id": "double_crossing",
-      "origin": "Original project-page layout, not a game level or paper evaluation map.",
-      "solution_steps": 24
-    },
-    {
       "id": "make_a_way",
       "origin": "Original project-page layout, not a game level or paper evaluation map.",
       "solution_steps": 17
     },
     {
-      "id": "remote_control",
-      "origin": "Original project-page layout, not a game level or paper evaluation map.",
+      "id": "lovely_garden",
+      "origin": "New project-page layout playing the role of original level 2 Where Do I Go?, with 3; not a copy of its layout, and not a paper evaluation map.",
+      "solution_steps": 11
+    },
+    {
+      "id": "pool_of_tears",
+      "origin": "New project-page layout playing the role of original level 4 Out Of Reach: the first sinking; not a copy of its layout, and not a paper evaluation map.",
+      "solution_steps": 22
+    },
+    {
+      "id": "lobster_quadrille",
+      "origin": "New project-page layout playing the role of original level 5 Still Out Of Reach: closes 4's loophole; not a copy of its layout, and not a paper evaluation map.",
+      "solution_steps": 21
+    },
+    {
+      "id": "cheshire_cat",
+      "origin": "New project-page layout playing the role of original level 6 Volcano; not a copy of its layout, and not a paper evaluation map.",
       "solution_steps": 19
+    },
+    {
+      "id": "croquet_ground",
+      "origin": "New project-page layout playing the role of original level 7 Off Limits; not a copy of its layout, and not a paper evaluation map.",
+      "solution_steps": 12
+    },
+    {
+      "id": "white_rabbit",
+      "origin": "New project-page layout playing the role of original level 11 Affection; not a copy of its layout, and not a paper evaluation map.",
+      "solution_steps": 13
+    },
+    {
+      "id": "hall_of_doors",
+      "origin": "New project-page layout playing the role of original level 13 Brick Wall; not a copy of its layout, and not a paper evaluation map.",
+      "solution_steps": 12
+    },
+    {
+      "id": "golden_key",
+      "origin": "New project-page layout playing the role of original level 14 Lock; not a copy of its layout, and not a paper evaluation map.",
+      "solution_steps": 19
+    },
+    {
+      "id": "queen_of_hearts",
+      "origin": "New project-page layout playing the role of original level 16 Locked In; not a copy of its layout, and not a paper evaluation map.",
+      "solution_steps": 10
+    },
+    {
+      "id": "stolen_tarts",
+      "origin": "New project-page layout playing the role of original level 22 Submerged Ruins; not a copy of its layout, and not a paper evaluation map.",
+      "solution_steps": 13
+    },
+    {
+      "id": "mock_turtle",
+      "origin": "New project-page layout playing the role of original level 24 Float; not a copy of its layout, and not a paper evaluation map.",
+      "solution_steps": 9
+    },
+    {
+      "id": "fish_footman",
+      "origin": "New project-page layout playing the role of original level 35-36 Research Facility, Wireless Connection; not a copy of its layout, and not a paper evaluation map.",
+      "solution_steps": 26
     }
   ]
 }

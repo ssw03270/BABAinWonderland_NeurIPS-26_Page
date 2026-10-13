@@ -11,6 +11,9 @@ import time
 
 ROOT = Path(__file__).resolve().parents[1]
 MAP_ID = "make_a_way"
+# The menu order: each map plays the role of an original level, in the original order (README).
+MAP_IDS = (MAP_ID, "lovely_garden", "pool_of_tears", "lobster_quadrille", "cheshire_cat", "croquet_ground", "white_rabbit",
+           "hall_of_doors", "golden_key", "queen_of_hearts", "stolen_tarts", "mock_turtle", "fish_footman")
 MAX_STEPS = 300  # an attempt ends here (the simulator truncates it)
 EXAMPLE_MOVES = {"movement": ["right"], "push": ["right"] * 3, "wall": ["up"]}  # fixed comparisons: moves from the first map's start
 sys.path.insert(0, str(ROOT / "runtime/vendor"))
@@ -44,7 +47,7 @@ class PageSandbox(ProgramSandbox):
 def create_game():
     aliases = json.loads((ROOT / "data/aliases.json").read_text(encoding="utf-8"))
     reverse_aliases = {value: key for key, value in aliases.items()}
-    maps = {name: json.loads((ROOT / "data/maps" / f"{name}.json").read_text(encoding="utf-8")) for name in (MAP_ID, "double_crossing", "remote_control")}
+    maps = {name: json.loads((ROOT / "data/maps" / f"{name}.json").read_text(encoding="utf-8")) for name in MAP_IDS}
     models = {}
     programs = {}
     sandbox = PageSandbox(SandboxConfig(timeout_ms=1500))

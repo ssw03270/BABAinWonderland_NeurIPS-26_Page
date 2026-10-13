@@ -1,0 +1,39 @@
+{
+  "scenario_name": "stolen_tarts",
+  "display_name": "Who Stole the Tarts?",
+  "difficulty": "original",
+  "width": 15,
+  "height": 11,
+  "layout": [
+    "###############",
+    "#......g......#",
+    "#.............#",
+    "#.r...b.......#",
+    "#.............#",
+    "#........;;;;;#",
+    "#.Z......;..Rf#",
+    "#.I......;..I.#",
+    "#&.X.....;....#",
+    "#VN*.....;BIY.#",
+    "###############"
+  ],
+  "dynamic_directions": {},
+  "inactive_rules": [],
+  "target_plan": "",
+  "objective": "Robots guard the flag's corner. Baba will need an accomplice.",
+  "solution": [
+    "right",
+    "right",
+    "right",
+    "right",
+    "right",
+    "right",
+    "down",
+    "down",
+    "down",
+    "down",
+    "down",
+    "down",
+    "right"
+  ]
+}

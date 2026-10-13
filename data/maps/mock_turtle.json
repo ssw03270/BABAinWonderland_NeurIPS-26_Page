@@ -1,0 +1,33 @@
+{
+  "scenario_name": "mock_turtle",
+  "display_name": "The Mock Turtle",
+  "difficulty": "original",
+  "width": 13,
+  "height": 9,
+  "layout": [
+    "#############",
+    "#ZIN..uuuuuu#",
+    "#.....u...Bu#",
+    "#..b..u.f.Iu#",
+    "#.....u...$u#",
+    "#.....u....u#",
+    "#.....uuuuuu#",
+    "#~I[.....BIY#",
+    "#############"
+  ],
+  "dynamic_directions": {},
+  "inactive_rules": [],
+  "target_plan": "",
+  "objective": "The flag waits on an island in the pool.",
+  "solution": [
+    "right",
+    "right",
+    "right",
+    "right",
+    "right",
+    "right",
+    "right",
+    "left",
+    "left"
+  ]
+}

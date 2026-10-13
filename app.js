@@ -154,7 +154,7 @@ $("result-tables").replaceChildren(
 );
 
 const canvas = $("game-canvas");
-const runtime = new Worker(new URL("runtime/worker.js?v=0f5e3e3cfa53", document.baseURI), {type:"module"});
+const runtime = new Worker(new URL("runtime/worker.js?v=c8867a71e159", document.baseURI), {type:"module"});
 const pendingRequests = new Map();
 let requestId = 0, runtimeError = null;
 runtime.addEventListener("message", ({data}) => {
@@ -585,7 +585,7 @@ function renderStrip() {
     strip.replaceChildren(...game.versions.map((version, k) => {
       const button = el("button");
       button.dataset.version = version;
-      button.style.setProperty("--k", k);
+      button.style.setProperty("--at", k / Math.max(game.versions.length - 1, 1));  // its place in the wave, 0 to 1
       return button;
     }));
   }
@@ -627,7 +627,8 @@ function renderStrip() {
   }
   if (!to) delete flip.dataset.version;
 }
-// The verdicts sweep in as a wave, from the first saved version to the latest (the pick already made).
+// The verdicts sweep in as a wave, from the first saved version to the latest (the pick already made); the wave takes
+// the same 0.15 s however many versions there are.
 function wave() {
   const strip = $("versions");
   strip.classList.remove("wave");

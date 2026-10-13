@@ -1,4 +1,5 @@
 """Check the bundled runtime against the original simulator's recorded outputs."""
+from collections import Counter
 import hashlib
 import json
 from pathlib import Path
@@ -6,7 +7,16 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from runtime.game import create_game
+from runtime.game import MAP_IDS, create_game
+
+# A map's mechanic shows at a known step of its saved solution: the world-object counts there.
+MECHANICS = {
+    ("pool_of_tears", 2): {"rock": 1, "water": 24},  # a rock sinks with a water cell
+    ("golden_key", 4): {"key": 0, "door": 7},  # the key opens a door; both vanish
+    ("golden_key", 17): {"rock": 0, "door": 6},  # the rock, a key now too, opens the second row
+    ("queen_of_hearts", 8): {"wall": 0, "love": 24},  # WALL IS LOVE turns every wall into a heart
+    ("mock_turtle", 7): {"water": 19},  # a word of the float rule drowns with a water cell
+}
 
 
 def digest(value):
@@ -71,30 +81,20 @@ def verify():
                 state = game("/action", {"action": action})
                 assert state["comparison"][world]["match"], (map_id, world, step)
                 assert state["won"] == (step == len(actions)), (map_id, world, step)
-                objects = {word: [obj["position"] for obj in state["board"]["objects"] if obj["type"] == "world_object" and obj["word"] == word] for word in ("baba", "rock", "water", "key", "door")}
-                if map_id == "double_crossing" and step in (5, 20):
-                    assert len(objects["rock"]) == (1 if step == 5 else 0)
-                    assert len(objects["water"]) == (9 if step == 5 else 8)
-                if map_id == "remote_control" and step == 9:
-                    assert objects["baba"] == [[3, 4]] and objects["rock"] == [[10, 7]], "Control must transfer to the remote rock"
-                if map_id == "remote_control" and step == 16:
-                    assert not objects["key"] and not objects["door"], "OPEN/SHUT must consume both objects"
+                objects = Counter(obj["word"] for obj in state["board"]["objects"] if obj["type"] == "world_object")
+                for word, count in MECHANICS.get((map_id, step), {}).items():
+                    assert objects[word] == count, (map_id, world, step, word)
                 frames.append(digest({"board": state["board"], "comparison": state["comparison"]}))
             assert frames == expected, (map_id, world)
             undone = game("/undo")
             assert undone["steps"] == len(actions) - 1 and not undone["won"]
             assert game("/action", {"action": actions[-1]})["won"]
             checks += len(frames)
-    # One sacrificed rock clears only half the river; entering the second cell loses Baba.
-    game("/reset", {"map": "double_crossing"})
-    for _ in range(7):
-        state = game("/action", {"action": "right"})
-    assert not state["won"] and not any(obj["word"] == "baba" and obj["type"] == "world_object" for obj in state["board"]["objects"])
     game("/version", {"version": "v002"})
     state = game("/reset", {"map": "make_a_way"})
     assert state["program"]["version"] == "v002" and state["world"] == "wonderland"
     assert state["steps"] == 0 and state["comparison"] is None and not state["canUndo"]
-    assert len(state["maps"]) == 3
+    assert [entry["id"] for entry in state["maps"]] == list(MAP_IDS)
     try:
         game("/reset", {"map": "../unknown"})
         raise AssertionError("An unknown map must be rejected")
@@ -109,7 +109,7 @@ def verify():
         filename = getattr(module, "__file__", None)
         if filename and (module.__name__ == "src" or module.__name__.startswith(("src.", "baba_in_wonderland"))):
             assert Path(filename).resolve().is_relative_to(ROOT / "runtime/vendor"), filename
-    return f"PASS: {checks} original-runtime comparisons; 3 puzzles in both worlds; sink, control transfer, and open/shut; map switching; static examples; 73 original program hashes; undo; no sibling imports"
+    return f"PASS: {checks} original-runtime comparisons; {len(MAP_IDS)} puzzles in both worlds; sink, open/shut, transformation, and float; map switching; static examples; 73 original program hashes; undo; no sibling imports"
 
 
 if __name__ == "__main__":

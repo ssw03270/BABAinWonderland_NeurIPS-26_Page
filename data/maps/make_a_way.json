@@ -1,6 +1,6 @@
 {
   "scenario_name": "make_a_way",
-  "display_name": "Warm-up",
+  "display_name": "Down the Rabbit-Hole",
   "difficulty": "original",
   "width": 15,
   "height": 11,
@@ -20,7 +20,7 @@
   "dynamic_directions": {},
   "inactive_rules": [],
   "target_plan": "Push the two rocks to reach the lower room. Push WIN upward to complete FLAG IS WIN, then touch the flag.",
-  "objective": "Push the rocks aside, then complete FLAG IS WIN in the lower room.",
+  "objective": "Shove the rocks aside, then finish the flag's sentence below.",
   "solution": [
     "right",
     "right",

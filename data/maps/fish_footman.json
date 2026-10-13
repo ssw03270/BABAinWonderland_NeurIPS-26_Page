@@ -1,0 +1,52 @@
+{
+  "scenario_name": "fish_footman",
+  "display_name": "The Fish-Footman",
+  "difficulty": "original",
+  "width": 15,
+  "height": 9,
+  "layout": [
+    "###############",
+    "#^I....jj.....#",
+    "#......jj.....#",
+    "#....M.jj....Z#",
+    "#.z....jj.....#",
+    "#..b...jj....N#",
+    "#...I.fjj.....#",
+    "#BIY...jj..JIX#",
+    "###############"
+  ],
+  "dynamic_directions": {
+    "2,4": 0
+  },
+  "inactive_rules": [],
+  "target_plan": "",
+  "objective": "The sign across the jellies is missing a word. Baba can't cross.",
+  "solution": [
+    "right",
+    "right",
+    "down",
+    "down",
+    "left",
+    "up",
+    "up",
+    "right",
+    "up",
+    "up",
+    "up",
+    "right",
+    "up",
+    "left",
+    "left",
+    "right",
+    "right",
+    "down",
+    "down",
+    "down",
+    "down",
+    "idle",
+    "idle",
+    "idle",
+    "idle",
+    "down"
+  ]
+}

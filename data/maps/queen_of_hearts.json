@@ -1,0 +1,36 @@
+{
+  "scenario_name": "queen_of_hearts",
+  "display_name": "Queen of Hearts",
+  "difficulty": "original",
+  "width": 13,
+  "height": 11,
+  "layout": [
+    "#############",
+    "#WIX........#",
+    "#BIY........#",
+    "#...wwwwwww.#",
+    "#...w.....w.#",
+    "#...w.....w.#",
+    "#...wWISINw.#",
+    "#...w...V.w.#",
+    "#...w.b...w.#",
+    "#...wwwwwww.#",
+    "#############"
+  ],
+  "dynamic_directions": {},
+  "inactive_rules": [],
+  "target_plan": "",
+  "objective": "Baba is walled in, and the walls are deadly to touch.",
+  "solution": [
+    "right",
+    "right",
+    "right",
+    "up",
+    "left",
+    "down",
+    "left",
+    "up",
+    "down",
+    "down"
+  ]
+}

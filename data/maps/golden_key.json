@@ -1,0 +1,43 @@
+{
+  "scenario_name": "golden_key",
+  "display_name": "The Golden Key",
+  "difficulty": "original",
+  "width": 13,
+  "height": 9,
+  "layout": [
+    "#############",
+    "#ZIN....kddf#",
+    "#.......rddd#",
+    "#....R..bddd#",
+    "#....KIP+!..#",
+    "#...........#",
+    "#...........#",
+    "#DIS+?...BIY#",
+    "#############"
+  ],
+  "dynamic_directions": {},
+  "inactive_rules": [],
+  "target_plan": "",
+  "objective": "Two rows of doors stand before the flag, and there is one key.",
+  "solution": [
+    "left",
+    "up",
+    "up",
+    "right",
+    "left",
+    "left",
+    "left",
+    "down",
+    "down",
+    "right",
+    "right",
+    "right",
+    "up",
+    "left",
+    "up",
+    "right",
+    "right",
+    "right",
+    "right"
+  ]
+}

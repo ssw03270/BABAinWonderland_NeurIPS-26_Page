@@ -1,0 +1,41 @@
+{
+  "scenario_name": "white_rabbit",
+  "display_name": "The White Rabbit",
+  "difficulty": "original",
+  "width": 15,
+  "height": 11,
+  "layout": [
+    "###############",
+    "#..........ZIN#",
+    "#QIM..........#",
+    "#ZI...........#",
+    "#.......sssss.#",
+    "#e......s...s.#",
+    "#....b..s.f.s.#",
+    "#.......s...s.#",
+    "#.......sssss.#",
+    "#BIY.......FIX#",
+    "###############"
+  ],
+  "dynamic_directions": {
+    "10,6": 2
+  },
+  "inactive_rules": [],
+  "target_plan": "",
+  "objective": "Skulls ring the flag. Keke strolls right through them.",
+  "solution": [
+    "up",
+    "up",
+    "left",
+    "left",
+    "left",
+    "left",
+    "up",
+    "right",
+    "right",
+    "right",
+    "down",
+    "down",
+    "down"
+  ]
+}

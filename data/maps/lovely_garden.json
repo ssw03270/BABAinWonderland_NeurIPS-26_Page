@@ -1,0 +1,35 @@
+{
+  "scenario_name": "lovely_garden",
+  "display_name": "The Lovely Garden",
+  "difficulty": "original",
+  "width": 13,
+  "height": 9,
+  "layout": [
+    "#############",
+    "#...........#",
+    "#.mmmmm.....#",
+    "#.m.{.m..N..#",
+    "#.m.I.m.....#",
+    "#.mbS.m.....#",
+    "#.mmmmm.....#",
+    "#........BIY#",
+    "#############"
+  ],
+  "dynamic_directions": {},
+  "inactive_rules": [],
+  "target_plan": "",
+  "objective": "Baba is fenced in by flowers, and there is nothing to reach.",
+  "solution": [
+    "up",
+    "right",
+    "down",
+    "right",
+    "up",
+    "left",
+    "left",
+    "up",
+    "right",
+    "right",
+    "right"
+  ]
+}
