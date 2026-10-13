@@ -266,15 +266,8 @@ const youCells = (board) => {
 function drawBoards() {
   if (!game) return;
   const prediction = game.comparison?.[game.world];
-  const objects = [...game.board.objects, ...(prediction?.board?.objects || [])];
   const [width, height] = game.board.grid_size;
-  // The camera takes in both the game's things and the prediction's, so a pick never moves the frame.
-  const xs = objects.map((o) => o.position[0]), ys = objects.map((o) => o.position[1]);
-  const x0 = objects.length ? Math.max(0, Math.min(...xs) - 2) : 0;
-  const y0 = objects.length ? Math.max(0, Math.min(...ys) - 2) : 0;
-  const x1 = objects.length ? Math.min(width - 1, Math.max(...xs) + 2) : width - 1;
-  const y1 = objects.length ? Math.min(height - 1, Math.max(...ys) + 2) : height - 1;
-  const frame = {x0, y0, x1, y1, width, height};
+  const frame = {x0: 0, y0: 0, x1: width - 1, y1: height - 1, width, height};  // always the whole map
   // The board shows the picked version's prediction (the game itself before a move, or when the code returns
   // nothing); where the prediction is wrong, marks say how the game really is: nothing drawn over anything.
   const shown = prediction?.board || game.board, diff = prediction?.board ? predictionDiff(game.board, prediction.board) : null;
@@ -340,8 +333,8 @@ function drawDiff(ctx, cell, {lacks, extra, turned}) {
   ctx.restore();
 }
 
-// The map's floor is a shade lighter than the panel, so its edge shows; where the frame cuts the map short, the floor
-// fades out instead.
+// The map's floor is a shade lighter than the panel, so its edge shows. The game shows the whole map; a story's
+// close-up cuts it short, and there the floor fades out rather than end in an edge the map does not have.
 const PANEL = "#101012", FLOOR = "#18181e";
 // ``overlay(ctx, cell)`` draws on top; ``cell(x, y)`` is a grid cell's top-left pixel. ``width`` and ``height`` are
 // the map's.
