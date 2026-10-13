@@ -24,57 +24,58 @@
     "programs/default/v019.py": "7f5c7a6aeaa21be95b537166ca2d2fda8a23a5c679665906aae21decc520a6f2",
     "programs/default/v020.py": "4c16d100e0d59039edd929b1583566be8331d545fefc72369339b07bbf6ca893",
     "programs/default/v021.py": "27705db6f7a3826c50a9fb700a36d45b604c254627d23214f31ad216d425cbd1",
-    "programs/wonderland/v000.py": "d47979efd67cd1368848f676e26b58d098710a151c742f3598ed7397a54aa599",
-    "programs/wonderland/v001.py": "d1a0d4454decf1f9c7cdcaf57c376211079cf92b0ee3670348a06a4b2dd767ab",
-    "programs/wonderland/v002.py": "ee1d742e25577414162c9d2e0bddc75fc787d6f80a9c0f0bfd1869eebd94c091",
-    "programs/wonderland/v003.py": "9597e8cb44e591316eacb70a35ef0da66c47497a899f9270ae1a76d2873e50a3",
-    "programs/wonderland/v004.py": "0b0de61767ea8415c022279959d435704ae69ea898420c2f02f3aee187c3440d",
-    "programs/wonderland/v005.py": "58b23034044a02e2665d53dec4018b2758218766536d5b6beeab7b6b2029bb96",
-    "programs/wonderland/v006.py": "7cabea512e1aa96ad046d8c330e1adac9943ff84ec2283e9df745574880ea22c",
-    "programs/wonderland/v007.py": "9d59c6dd7d4ff8c759bea1b79551c024ea7f7c81c211e7ccc89f38f669452719",
-    "programs/wonderland/v008.py": "3996c20b26d1e5e30edabab7925b432ff55098b66e8cae244aeecfe42ee4cdae",
-    "programs/wonderland/v009.py": "789a22a5a2f08de328d8b1af38ba8d49db8e1c322b82b465a86ab4182aac972e",
-    "programs/wonderland/v010.py": "3656740adec918cfa10b7d9edf4a804a75bde9cd7fc1edf339aabd59f073d2d8",
-    "programs/wonderland/v011.py": "a81bbe00d936113d6a7ef1c9c7189880c8d922637843c997ec38340c03326c64",
-    "programs/wonderland/v012.py": "c33fd8a3755b63228d7d8f24acc65dbf2b1c5c191d67c52efc4152afd2909b14",
-    "programs/wonderland/v013.py": "2e4a4964a39d1c1bbcd678691ab4705a909e8fd3e32f371711a799481ac8a506",
-    "programs/wonderland/v014.py": "7eef656db65c2695167a43876cd42e172945a0c688eadf8b20e4904f4826817c",
-    "programs/wonderland/v015.py": "6d4c2cc63ee0aba979bb39db38ccd4168da5195f226e5e604a63e1ad72df1d55",
-    "programs/wonderland/v016.py": "c8569322b90f8a02a5b6c99d25b16d910e15c3ddf203a1c8506f59a69ea30520",
-    "programs/wonderland/v017.py": "f478467f5a4ff0f6031b100d080e158b9c4008eb94beb61162e76363f5ab5fde",
-    "programs/wonderland/v018.py": "306a6b97be8684a06f935c7101f24aede7b0ad8c49a8107013c04a33253cc90c",
-    "programs/wonderland/v019.py": "0b7ddd31255f7acdbc04975e5f511a3565c053c6b925ea5a045b487bd3841a8d",
-    "programs/wonderland/v020.py": "56029aa16118bbb9a63c302d29c7f32be701d6575c532a527b3c8ee9e696ae4c",
-    "programs/wonderland/v021.py": "741945d15fbd4977cf7e69c9e3707459d56c336f6c1bd8d9ffbdee90fc83ea5b",
-    "programs/wonderland/v022.py": "7224658685ab8b0952c604d6646f0f962f554432b1ee56f67141c5d18f5eb497",
-    "programs/wonderland/v023.py": "e048f73567ca020585e3f06be2beb1ab97410907784cbf70eb23c7dd93c4d631",
-    "programs/wonderland/v024.py": "e1b56a5de75fced637a859d4ddf4014b812b096d5228ecba63903f3e1a8379af",
-    "programs/wonderland/v025.py": "cc133c9976026f2c7e7bfde6923587d92ffbbbab6da022f49a245579c7a3b79f",
-    "programs/wonderland/v026.py": "3d31248ab9f7858c4f1ee6cbfa8d40b498e96e5de8f196a66bd04f3620db631b",
-    "programs/wonderland/v027.py": "4ba4031331953f471d23e34dc738a7900f54665a625a7c8be5ab7065876fc5bb",
-    "programs/wonderland/v028.py": "b1177e455ee1e0bca8efeaf84567d1fb9547dfebd483c1a7634d84d240901288",
-    "programs/wonderland/v029.py": "13bac9deaa6d11039c26d946576dfdd22f98e571f906d50f17c8a09d17993187",
-    "programs/wonderland/v030.py": "33c7d926e0b63c781a0f9c0a7848db79087f20ce1f0e648119f3b60a921a7e44",
-    "programs/wonderland/v031.py": "75975c9346397efcf084647464672ab9abbd86a833f8911edf044121f02c3e41",
-    "programs/wonderland/v032.py": "f9bf254c40228101ef0d6bb7d6f02cd9e0fb48a6d9403174323684e8429972a3",
-    "programs/wonderland/v033.py": "98cd6da03009f9b82c61d27098d47a7b97a408940da7a6c8885b4325dab217be",
-    "programs/wonderland/v034.py": "b050e3f595baf9e775cf39376c4b3783f218304c017e55377874ab2ae7d3abc6",
-    "programs/wonderland/v035.py": "d0f083bbe8a35e00adacd8e56c4c4c5f20341ffa297193c9a0c8acf8c1c6cca2",
-    "programs/wonderland/v036.py": "62eab5722711b1a783f90e97626da25bc25b3143cfa85d1fe0dca2523a7a4be0",
-    "programs/wonderland/v037.py": "cdeec6237eda878a878c3bd7e7e0b8e87398296110603b29e275e76ecf2894b4",
-    "programs/wonderland/v038.py": "e96cda5386104aabafa8332ed6d5b8d49e83499b5b98e9611bb666f2e84a3bfc",
-    "programs/wonderland/v039.py": "5e13eed5a005f6c3b4da3f4e1715c24a4955d9c692618d20a7848d9ca74af4f6",
-    "programs/wonderland/v040.py": "ca2442cfe0823729e022273444fcf0e40de25810a8a95de4c3c08b275afef79f",
-    "programs/wonderland/v041.py": "179a9e74e1e069800e4eda6c972e6133f739f5671f9bc3d8e8cc67083ffa5231",
-    "programs/wonderland/v042.py": "f93854a2b73d197aad02f52d0cc184238725726d5c679fb4f5457a1b146a46da",
-    "programs/wonderland/v043.py": "918d4183fafafb32ac84f6e56707c75d2a7a57a65beff55113c13249a447fc32",
-    "programs/wonderland/v044.py": "bd0a35086bbc79f062f88f1730e920ab1924d066f38e4367ecbc7df3aed344ec",
-    "programs/wonderland/v045.py": "c5a5ef4256f7dd7bf774004cd9a47822b5ca64821233a2e5248c03f4e338e88d",
-    "programs/wonderland/v046.py": "5a9298f97c436bd0f95baae16743858fc8d5a9cda2602dc08b1d5a04edfd514f",
-    "programs/wonderland/v047.py": "552ecf0887ad4b0652d0bbf9f8869f6db95af747c9bddaa8ceee765df1b36e42",
-    "programs/wonderland/v048.py": "9d286d6d1b566d54a3b100efa021990563103839d808b98c3e18234dd3b7e40e",
-    "programs/wonderland/v049.py": "1ff110eb042b1ad402395b56665f0bb1d58011aad734d9d7ad88dc1c1f9bb883",
-    "programs/wonderland/v050.py": "b6824886a775bc10bfcb82523cb75c921642cb407e56aea63b37bc92e2026430",
+    "programs/wonderland/v000.py": "356d4125e4cf24ccdf65139afc410b1ae775578e2abaafa6f54e75c3dca1d445",
+    "programs/wonderland/v001.py": "343edf3ec49a9dce2cbf0bc5d8c2caa66abddd5e4d5cf804b3ddb2d2c7dfaf15",
+    "programs/wonderland/v002.py": "d7ee8fa36b6ffdc81a2bd2420088871d6b319cbbc461889043ccd9436f1eafb3",
+    "programs/wonderland/v003.py": "174606fcc382ee4decead501ed87aaa6cdc0625f806719705a0f2f5dbe6e143f",
+    "programs/wonderland/v004.py": "c83136294e1cb9685a71ba646d795a7c2093eb3dbf4d2e0801314ba23b43d527",
+    "programs/wonderland/v005.py": "01584c114ddc239e1efcf567ee1c59984f01b182b00f5d35c6c1e0945b78a6c0",
+    "programs/wonderland/v006.py": "813cdeb25d2ba1ec46a438bf0a509f60cd46ff0fdab7a5a4d0372db7f8b4071d",
+    "programs/wonderland/v007.py": "78d74be1e0a6025fba89c993e6941fa13542bf8827b8624e93e427604b2cda53",
+    "programs/wonderland/v008.py": "0285c27acbb7e5001a7f9d67e44d009f48e0cbe5dad3932504df6e71a903d36a",
+    "programs/wonderland/v009.py": "dacb4a2c4c1056586c7b939c06354e2d2128d4955e65177f9ab7ef6d33f03255",
+    "programs/wonderland/v010.py": "5f49bcac25ed03057522ad684fbf7fdfcb378fbe1f59a04d610630a1b4bbb163",
+    "programs/wonderland/v011.py": "cf8af2897ee7257003ed7cf68124e4d685c8db52d50c0bd79931f5038e604a93",
+    "programs/wonderland/v012.py": "51300436888037e85afd6f00ac112f52127d02f1b53d93be6a1d65c4c544b22f",
+    "programs/wonderland/v013.py": "27b1471331ea5078e57f6a06aff367812c5f6713d373d652ccdc9beb7823e64d",
+    "programs/wonderland/v014.py": "e7d6d1e39819335ae8f53e29b4fcd809031d173a235ae3d472ebf3b6be2b6f30",
+    "programs/wonderland/v015.py": "30085b9f4151ce7ad36df5de6e065abcbea00d73b2b14dda22430a3080c10d0f",
+    "programs/wonderland/v016.py": "afa856f59d2171b0255f11a2f991d101f973537fde47d0b94eba8e9560e7a82e",
+    "programs/wonderland/v017.py": "8ceeb8c23e16f60b0b007324f07da16bd62eae27f10b04fdf79bdd5ff363b767",
+    "programs/wonderland/v018.py": "4d6a91e15f1a890341d395d8bfb277fd7f9ee2dc7bbe8e826e00fc9f9a60496b",
+    "programs/wonderland/v019.py": "096e9a85fd78c13d40c7806c4f5cb5b50291a99bc591bdc0ac856f35596ebf37",
+    "programs/wonderland/v020.py": "42c8a60adf0b4cc4670e506a7c1e3baa9dfba933ffb54ed4881a82e872371436",
+    "programs/wonderland/v021.py": "3c1bec68b8ad5a8777d3f4626d762278b8447aac531d8a68d4e212379f121049",
+    "programs/wonderland/v022.py": "e98b6867b0d7824539192e2010bbc665487a9899d1ec2317d58e2a0321e42b98",
+    "programs/wonderland/v023.py": "7c1ba125e8c84a5736fae316fd6f9dd1bae14e4e5dd19bfb24fd899e3cd873ff",
+    "programs/wonderland/v024.py": "58a76bc2cb12ae2798cf96336e35433b8b8120175e14e409d1d6d54f27c53d45",
+    "programs/wonderland/v025.py": "29e5213a50bff57b6047cabde8e8fbcc510ab440ebc9fe163f67216c6939c39d",
+    "programs/wonderland/v026.py": "e3c8106360da0238d9407e76d512f166a48f940c8f1368f7aefe7b3647b0d4f2",
+    "programs/wonderland/v027.py": "89b7c8c4d5a1daa109b3c13c1d9e3606ab2b129966aea203d26477069f9bbb52",
+    "programs/wonderland/v028.py": "14a7075c21dc1a0e9cd95bc7e03fe6a11913d1b1ffa71cfd9e0ef69a3389a446",
+    "programs/wonderland/v029.py": "f1a4cc9e2095b073a2cd4f2f7e388435ce502407c311bddf08a4d86eec81f84b",
+    "programs/wonderland/v030.py": "1dd852dda76d2a324bead9149aa472052397bf6fe119b34a93b57a4d67ac9081",
+    "programs/wonderland/v031.py": "787b8f5d7a8760e3e951b1fc1cc3c8447ac089363ea80dd5d6ed58b0f7ac6999",
+    "programs/wonderland/v032.py": "a52f42dc0c58477bdbd7c79683da7943e0708853738c60cf591eae1deb911a9c",
+    "programs/wonderland/v033.py": "08ea3db9ae8d19f3a343d73290de1717d0b6897da1a87aa3d09d97d72ed4d77c",
+    "programs/wonderland/v034.py": "cb6c4ad362ad026ac7281bfca0aa81f50b26ce2d4fd9c742b124d68a57259b77",
+    "programs/wonderland/v035.py": "01616962178018031cb8bd7c2e2d7b5e998b222b8642cde5ad504a2a33b5fce4",
+    "programs/wonderland/v036.py": "192fbf48ad3cd8ee1dc0d22031412efe06a3ae7a10cb08e940a8dc416ffeb3ea",
+    "programs/wonderland/v037.py": "3c92fc23f9a129fa7fd39eb08d080a8f28fba6c4f54c00d809022dd977757666",
+    "programs/wonderland/v038.py": "2eacfe36aa9d50bbbdb63dbba57117b9801cb6cf01b46950e82060e1b317c960",
+    "programs/wonderland/v039.py": "f9d1abd42b53a591b14fc5c575ac49159d65bb0dacfbec5177f4404e90c6cedb",
+    "programs/wonderland/v040.py": "a195ea2b04187c0829d132fd97b16cfdce1f8099a26b8bf6c5207d9bc823e9be",
+    "programs/wonderland/v041.py": "2ec4f4fada70781127edd898fb03b5ba84c87654f34a6a091b930ae38ad2a415",
+    "programs/wonderland/v042.py": "dea83133fbe4199bac9e1c89b101852c90194fbebc657e51fddd25e8edbbcba2",
+    "programs/wonderland/v043.py": "56120f1f6a745037d9e57bca18aa25859f984c591d57daa88f054dc7229f60bd",
+    "programs/wonderland/v044.py": "6e990883fa115b1ca4d124ef64e1d9fea9f23c04019253dd10dba420b1189553",
+    "programs/wonderland/v045.py": "d29a65328b4d8e404cb3d7f407aec8d5aecb4ea8e7640d0baebddba8c70e97fb",
+    "programs/wonderland/v046.py": "2ca6ea195b5caaeda8faf9c388786054f4d8765f2aaa2fca9c4e5ff47dbebcb5",
+    "programs/wonderland/v047.py": "f2c1eb93f7abfb67b7a9739dc23a4c1c7c221a6240599d58bf23766b5493d949",
+    "programs/wonderland/v048.py": "5ac86140b84156427eec81ab296e959c083eae8e27c11da8c6aaa3d284bb57b1",
+    "programs/wonderland/v049.py": "169fffbf6e343745202182e125a1fcd56e07cad9a2635a6225f6e775cbbbfa88",
+    "programs/wonderland/v050.py": "482bf1cfc202e6fd79792883136ccdbb3a6eeb796aa40b0aab772d30252883d2",
+    "programs/wonderland/v051.py": "f925f1445352c16be683d9a5680eb4d002defc180b098ee5ef362272fd7db072",
     "runtime/vendor/src/__init__.py": "558c58e434927b1b27467ad42178ad01d0d2d76479380205ce5cf3896b20fa11",
     "runtime/vendor/src/data/state_schema.py": "16e77208915efbd078a79fb1f6583ee2e1442c2bd37f0bb953e83cb606f59e4c",
     "runtime/vendor/src/data/state_store.py": "baf4066204563bf97af5d2a924aa48dc2d7d3f721fc6fd87df86273b8b198974",
@@ -120,58 +121,55 @@
     },
     {
       "id": "pool_of_tears",
-      "origin": "New project-page layout playing the role of original level 4 Out Of Reach: the first sinking; not a copy of its layout, and not a paper evaluation map.",
-      "solution_steps": 18
+      "origin": "New project-page layout playing the role of original level 4 Out Of Reach: the first sinking, with too few sinkers; not a copy of its layout, and not a paper evaluation map.",
+      "solution_steps": 25
     },
     {
       "id": "lobster_quadrille",
-      "origin": "New project-page layout playing the role of original level 5 Still Out Of Reach: closes 4's loophole; not a copy of its layout, and not a paper evaluation map.",
-      "solution_steps": 21
+      "origin": "New project-page layout playing the role of original level 5 Still Out Of Reach: the first DEFEAT; not a copy of its layout, and not a paper evaluation map.",
+      "solution_steps": 34
     },
     {
       "id": "cheshire_cat",
-      "origin": "New project-page layout playing the role of original level 6 Volcano; not a copy of its layout, and not a paper evaluation map.",
-      "solution_steps": 19
-    },
-    {
-      "id": "croquet_ground",
-      "origin": "New project-page layout playing the role of original level 7 Off Limits; not a copy of its layout, and not a paper evaluation map.",
-      "solution_steps": 12
+      "origin": "New project-page layout playing the role of original level 6 Volcano: a hazard used, not removed; not a copy of its layout, and not a paper evaluation map.",
+      "solution_steps": 33
     },
     {
       "id": "white_rabbit",
-      "origin": "New project-page layout playing the role of original level 11 Affection; not a copy of its layout, and not a paper evaluation map.",
-      "solution_steps": 13
+      "origin": "New project-page layout playing the role of original level 11 Affection: MOVE; not a copy of its layout, and not a paper evaluation map.",
+      "solution_steps": 15
     },
     {
-      "id": "hall_of_doors",
-      "origin": "New project-page layout playing the role of original level 13 Brick Wall; not a copy of its layout, and not a paper evaluation map.",
-      "solution_steps": 12
+      "id": "caterpillar",
+      "origin": "New project-page layout playing the role of original level 13 Brick Wall: winning without reaching the goal; not a copy of its layout, and not a paper evaluation map.",
+      "solution_steps": 33
     },
     {
       "id": "golden_key",
-      "origin": "New project-page layout playing the role of original level 14 Lock; not a copy of its layout, and not a paper evaluation map.",
-      "solution_steps": 19
+      "origin": "New project-page layout playing the role of original level 14 Lock: one door more than keys; not a copy of its layout, and not a paper evaluation map.",
+      "solution_steps": 31
     },
     {
       "id": "queen_of_hearts",
-      "origin": "New project-page layout playing the role of original level 16 Locked In; not a copy of its layout, and not a paper evaluation map.",
-      "solution_steps": 10
+      "origin": "New project-page layout playing the role of original level 16 Locked In: transformation; not a copy of its layout, and not a paper evaluation map.",
+      "solution_steps": 28
     },
     {
       "id": "stolen_tarts",
-      "origin": "New project-page layout playing the role of original level 22 Submerged Ruins; not a copy of its layout, and not a paper evaluation map.",
+      "origin": "New project-page layout playing the role of original level 22 Submerged Ruins: a trap that fires as you win; not a copy of its layout, and not a paper evaluation map.",
       "solution_steps": 14
     },
     {
       "id": "mock_turtle",
       "origin": "New project-page layout playing the role of original level 24 Float; not a copy of its layout, and not a paper evaluation map.",
-      "solution_steps": 9
-    },
-    {
-      "id": "fish_footman",
-      "origin": "New project-page layout playing the role of original level 35-36 Research Facility, Wireless Connection; not a copy of its layout, and not a paper evaluation map.",
-      "solution_steps": 26
+      "solution_steps": 28
     }
-  ]
+  ],
+  "program_runs": {
+    "wonderland": {
+      "run": "ours_rc035_u30_s8801",
+      "versions": "v000-v051",
+      "count": 52
+    }
+  }
 }

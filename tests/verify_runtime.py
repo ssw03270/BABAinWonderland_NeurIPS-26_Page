@@ -11,12 +11,14 @@ from runtime.game import MAP_IDS, PageSandbox, SandboxConfig, create_game
 
 # A map's mechanic shows at a known step of its saved solution: the world-object counts there.
 MECHANICS = {
-    ("pool_of_tears", 6): {"rock": 0, "water": 13},  # the rock sinks with a water cell
-    ("pool_of_tears", 15): {"water": 12},  # then the PUSH word sinks with the second
-    ("golden_key", 4): {"key": 0, "door": 7},  # the key opens a door; both vanish
-    ("golden_key", 17): {"rock": 0, "door": 6},  # the rock, a key now too, opens the second row
-    ("queen_of_hearts", 8): {"wall": 0, "love": 24},  # WALL IS LOVE turns every wall into a heart
-    ("mock_turtle", 7): {"water": 19},  # a word of the float rule drowns with a water cell
+    ("pool_of_tears", 14): {"rock": 0, "water": 23},  # the rock fills the channel
+    ("pool_of_tears", 19): {"water": 22},  # the WATER word drowns, and its rule with it
+    ("lobster_quadrille", 31): {"crab": 0},  # CRAB IS YOU: crabs that are YOU and DEFEAT destroy themselves
+    ("cheshire_cat", 32): {"jelly": 1},  # a melting jelly pushed into the lava
+    ("cheshire_cat", 33): {"jelly": 0},
+    ("golden_key", 6): {"key": 0, "door": 1},  # the key opens the first door
+    ("golden_key", 29): {"door": 0},  # DOOR IS OPEN while SHUT: the last door opens itself
+    ("queen_of_hearts", 18): {"skull": 0, "love": 19},  # SKULL IS LOVE turns the prison into hearts
 }
 
 
@@ -80,7 +82,6 @@ def verify():
             frames = [digest({"board": state["board"], "comparison": state["comparison"]})]
             for step, action in enumerate(actions, 1):
                 state = game("/action", {"action": action})
-                assert state["comparison"][world]["match"], (map_id, world, step)
                 assert state["won"] == (step == len(actions)), (map_id, world, step)
                 objects = Counter(obj["word"] for obj in state["board"]["objects"] if obj["type"] == "world_object")
                 for word, count in MECHANICS.get((map_id, step), {}).items():
@@ -121,11 +122,12 @@ def verify():
     for name, expected in provenance["original_sha256"].items():
         if name.startswith("programs/"):
             assert hashlib.sha256((ROOT / name).read_bytes()).hexdigest() == expected, name
+    programs = sum(name.startswith("programs/") for name in provenance["original_sha256"])
     for module in tuple(sys.modules.values()):
         filename = getattr(module, "__file__", None)
         if filename and (module.__name__ == "src" or module.__name__.startswith(("src.", "baba_in_wonderland"))):
             assert Path(filename).resolve().is_relative_to(ROOT / "runtime/vendor"), filename
-    return f"PASS: {checks} original-runtime comparisons; {len(MAP_IDS)} puzzles in both worlds; sink, open/shut, transformation, and float; map switching; static examples; 73 original program hashes; undo; the record after an undo; the time guard; no sibling imports"
+    return f"PASS: {checks} original-runtime comparisons; {len(MAP_IDS)} puzzles in both worlds; sink, self-destruction, melting, open/shut, and transformation; map switching; static examples; {programs} original program hashes; undo; the record after an undo; the time guard; no sibling imports"
 
 
 if __name__ == "__main__":

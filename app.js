@@ -154,7 +154,7 @@ $("result-tables").replaceChildren(
 );
 
 const canvas = $("game-canvas");
-const runtime = new Worker(new URL("runtime/worker.js?v=0358abf95582", document.baseURI), {type:"module"});
+const runtime = new Worker(new URL("runtime/worker.js?v=70063d9d1049", document.baseURI), {type:"module"});
 const pendingRequests = new Map();
 let requestId = 0, runtimeError = null;
 runtime.addEventListener("message", ({data}) => {
@@ -179,7 +179,7 @@ function runtimeRequest(path, body) {
   });
 }
 let game = null, busy = false, codeView = "diff", codeShown = "";
-let verdicts = new Map();
+let verdicts = new Map(), showGuess = false;  // showGuess: the picked version's guess on the board when no version is right
 let autoRunning = false, autoPaused = false, autoTimer = null;
 // Sprites boil like the game's: every sprite is a sheet of its frames (assets/sprites/*/NAME.png, the Wonderland
 // words included), and one clock picks the frame for all of them.
@@ -269,8 +269,9 @@ function drawBoards() {
   const [width, height] = game.board.grid_size;
   const frame = {x0: 0, y0: 0, x1: width - 1, y1: height - 1, width, height};  // always the whole map
   // The board shows the picked version's prediction (the game itself before a move, or when the code returns
-  // nothing); where the prediction is wrong, marks say how the game really is: nothing drawn over anything.
-  const shown = prediction?.board || game.board, diff = prediction?.board ? predictionDiff(game.board, prediction.board) : null;
+  // nothing); where the prediction is wrong, marks say how the game really is: nothing drawn over anything. When no
+  // version gets the move right, it shows the game itself with the same marks, and the guess is one click away.
+  const shown = (!realView() && prediction?.board) || game.board, diff = prediction?.board ? predictionDiff(game.board, prediction.board) : null;
   drawBoard(canvas, shown, frame, [], game.world, game.aliases, (ctx, cell) => {
     if (diff) drawDiff(ctx, cell, diff);
     effectsOn("game")(ctx, cell);
@@ -492,10 +493,14 @@ function verdictText(prediction) {
   if (!prediction.terminationMatch) return prediction.board.step?.terminated ? "✗ predicts a win" : "✗ misses the win";
   return "✗ state differs";
 }
+// No saved version gets the last move right: the latest is picked, and the board shows the game itself unless its
+// guess is asked for.
+const unsolved = () => Boolean(game?.comparison?.[game.world]) && verdicts.size > 0 && ![...verdicts.values()].some(Boolean);
+const realView = () => unsolved() && !showGuess;
 function renderComparison() {
   const prediction = game.comparison?.[game.world];
   $("prediction-result").textContent = verdictText(prediction);
-  $("board-name").textContent = prediction?.board && !prediction.match ? "Prediction" : "Real game";
+  $("board-name").textContent = prediction?.board && !prediction.match && !realView() ? "Prediction" : "Real game";
   $("prediction-result").dataset.match = prediction ? String(prediction.match) : "pending";
   drawBoards();
 }
@@ -616,7 +621,7 @@ function renderStrip() {
         badge.textContent = version;
         badge.dataset.verdict = state || "pending";
       }
-      $("code-verdict").textContent = {fixed: "fixes this move", right: "right on this move", wrong: "wrong on this move"}[state] || "";
+      $("code-verdict").textContent = unsolved() ? "no version gets this move right yet" : {fixed: "fixes this move", right: "right on this move", wrong: "wrong on this move"}[state] || "";
     }
     before = verdict;
   }
@@ -624,11 +629,12 @@ function renderStrip() {
   // (wrong); on that one, the way back. Elsewhere nothing.
   const k = game.versions.indexOf(picked), flip = $("fix-flip"), previous = game.versions[k - 1], next = game.versions[k + 1];
   const fixedHere = (v, w) => verdicts.get(v) === true && verdicts.get(w) === false;
-  const to = fixedHere(picked, previous) ? previous : fixedHere(next, picked) ? next : null;
+  // When no version gets the move right, the same pill turns between the game and the picked version's guess.
+  const to = unsolved() ? (showGuess ? "game" : "guess") : fixedHere(picked, previous) ? previous : fixedHere(next, picked) ? next : null;
   flip.hidden = !to;
   if (to && flip.dataset.version !== to) {
     flip.dataset.version = to;
-    flip.textContent = to === previous ? `↶ ${to} before the fix` : `↷ ${to} after the fix`;
+    flip.textContent = {guess: `↷ ${picked}'s guess`, game: "↶ real game"}[to] || (to === previous ? `↶ ${to} before the fix` : `↷ ${to} after the fix`);
     flip.classList.remove("nudge");
     void flip.offsetWidth;
     flip.classList.add("nudge");
@@ -725,7 +731,7 @@ function renderOverlay() {
   // The board shows the picked version's prediction, so its win is the one shown (a game here ends only in a win);
   // the way back appears only when the game itself is over.
   const prediction = game.comparison?.[game.world];
-  const shownWon = prediction?.board ? Boolean(prediction.board.step?.terminated) : game.won;
+  const shownWon = prediction?.board && !realView() ? Boolean(prediction.board.step?.terminated) : game.won;  // the board shown decides
   let state = "", parts = [];
   if (shownWon) {
     state = "won";
@@ -790,8 +796,9 @@ async function gameRequest(path = "", body) {
     let next = await runtimeRequest(path, body), judged = null;
     if (path !== "/version") {
       judged = next.comparison ? (await runtimeRequest("/verdicts")).verdicts : [];
-      const fix = lastFix(judged);
-      if (fix && fix !== next.program.version) next = await runtimeRequest("/version", {version: fix});
+      const pick = lastFix(judged) || (judged.length ? next.versions.at(-1) : null);  // none right: the latest
+      if (pick && pick !== next.program.version) next = await runtimeRequest("/version", {version: pick});
+      showGuess = false;
       verdicts = new Map(judged.map(({version, match}) => [version, match]));
     }
     game = next; renderGame();
@@ -842,7 +849,12 @@ $("auto-play").addEventListener("click", async () => {
 });
 document.querySelectorAll("[data-world]").forEach(button => button.addEventListener("click", () => gameRequest("/world",{world:button.dataset.world})));
 // A changed menu lets go of the keys at once, so the next arrow key moves Baba instead of the menu's choice.
-$("fix-flip").addEventListener("click", () => { $("fix-flip").blur(); gameRequest("/version", {version: $("fix-flip").dataset.version}); });
+$("fix-flip").addEventListener("click", () => {
+  const to = $("fix-flip").dataset.version;
+  $("fix-flip").blur();
+  if (to === "guess" || to === "game") { showGuess = to === "guess"; renderStrip(); renderComparison(); renderOverlay(); }
+  else gameRequest("/version", {version: to});
+});
 $("versions").addEventListener("click", (event) => {
   const button = event.target.closest("button[data-version]");
   if (button) { button.blur(); gameRequest("/version", {version: button.dataset.version}); }
