@@ -103,7 +103,9 @@
   "adaptations": [
     "runtime/vendor/src/data/__init__.py: import only state storage",
     "runtime/vendor/src/program_model/__init__.py: omit training-only imports",
-    "runtime/vendor/src/environments/custom_map_spec.py: repository-local data/maps path"
+    "runtime/vendor/src/environments/custom_map_spec.py: repository-local data/maps path; PyYAML imported only to read a split manifest",
+    "runtime/vendor/baba_in_wonderland/world_object.py: a rule block draws its label image when first rendered, not when created",
+    "runtime/vendor/baba_in_wonderland/utils.py: OpenCV imported only to draw text"
   ],
   "demo_maps": [
     {

@@ -1,3 +1,4 @@
+from functools import cached_property
 import math
 
 import numpy as np
@@ -393,9 +394,13 @@ class RuleBlock(WorldObj):
         self.name = name = name_mapping.get(name, name)
         self.dir = 0
         self.margin = 10
+
+    @cached_property
+    def img(self):
+        # The label image, drawn when first rendered rather than for every new block: drawing text needs OpenCV.
         img = np.zeros((96-2*self.margin, 96-2*self.margin, 3), np.uint8)
-        add_img_text(img, name)
-        self.img = img
+        add_img_text(img, self.name)
+        return img
 
     def set_ruleset(self, ruleset):
         self._ruleset = ruleset

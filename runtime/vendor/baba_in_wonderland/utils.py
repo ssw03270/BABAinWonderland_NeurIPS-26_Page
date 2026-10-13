@@ -1,6 +1,5 @@
 from itertools import product
 
-import cv2
 import numpy as np
 
 
@@ -12,6 +11,7 @@ def _get_font_scale(text):
     #     return 0.9
 
 def add_img_text(img, text):
+    import cv2  # (only rendering draws text, so OpenCV loads only then)
     font = cv2.FONT_HERSHEY_SIMPLEX
     fontscale = _get_font_scale(text)
     thickness = 3

@@ -4,8 +4,6 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
-import yaml
-
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 CUSTOM_MAP_ROOT = Path(__file__).resolve().parents[4] / "data/maps"
@@ -313,6 +311,8 @@ def load_custom_map_split_manifest(
     path = resolve_custom_map_split_manifest_path(path_or_str)
     if not path.exists():
         raise FileNotFoundError(f"Custom map split manifest not found: {path}")
+
+    import yaml  # (only a split manifest is YAML, so PyYAML loads only to read one)
 
     payload = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     if not isinstance(payload, Mapping):
