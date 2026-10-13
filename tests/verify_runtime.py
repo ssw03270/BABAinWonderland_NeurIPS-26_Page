@@ -11,14 +11,15 @@ from runtime.game import MAP_IDS, PageSandbox, SandboxConfig, create_game
 
 # A map's mechanic shows at a known step of its saved solution: the world-object counts there.
 MECHANICS = {
-    ("pool_of_tears", 14): {"rock": 0, "water": 23},  # the rock fills the channel
-    ("pool_of_tears", 19): {"water": 22},  # the WATER word drowns, and its rule with it
+    ("pool_of_tears", 10): {"rock": 0, "water": 19},  # the rock fills one cell of the channel
+    ("pool_of_tears", 21): {"water": 18},  # the PUSH word fills the other
     ("lobster_quadrille", 31): {"crab": 0},  # CRAB IS YOU: crabs that are YOU and DEFEAT destroy themselves
-    ("cheshire_cat", 32): {"jelly": 1},  # a melting jelly pushed into the lava
-    ("cheshire_cat", 33): {"jelly": 0},
-    ("golden_key", 6): {"key": 0, "door": 1},  # the key opens the first door
-    ("golden_key", 29): {"door": 0},  # DOOR IS OPEN while SHUT: the last door opens itself
-    ("queen_of_hearts", 18): {"skull": 0, "love": 19},  # SKULL IS LOVE turns the prison into hearts
+    ("cheshire_cat", 44): {"jelly": 1},  # a melting jelly pushed into the lava
+    ("cheshire_cat", 45): {"jelly": 0},
+    ("golden_key", 18): {"door": 0},  # DOOR IS OPEN while SHUT: the cupboard destroys itself
+    ("golden_key", 45): {"key": 0, "wall": 7},  # the OPEN key breaks into the SHUT garden wall
+    ("queen_of_hearts", 16): {"rock": 0, "love": 1},  # breaking ROCK IS ROCK lets ROCK IS BABA turn the rocks
+    ("alices_evidence", 33): {"water": 12},  # without TEXT IS FLOAT the words on the water drown with it
 }
 
 
@@ -127,7 +128,7 @@ def verify():
         filename = getattr(module, "__file__", None)
         if filename and (module.__name__ == "src" or module.__name__.startswith(("src.", "baba_in_wonderland"))):
             assert Path(filename).resolve().is_relative_to(ROOT / "runtime/vendor"), filename
-    return f"PASS: {checks} original-runtime comparisons; {len(MAP_IDS)} puzzles in both worlds; sink, self-destruction, melting, open/shut, and transformation; map switching; static examples; {programs} original program hashes; undo; the record after an undo; the time guard; no sibling imports"
+    return f"PASS: {checks} original-runtime comparisons; {len(MAP_IDS)} puzzles in both worlds; sink, self-destruction, melting, open/shut, transformation, and floating words; map switching; static examples; {programs} original program hashes; undo; the record after an undo; the time guard; no sibling imports"
 
 
 if __name__ == "__main__":

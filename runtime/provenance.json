@@ -132,12 +132,12 @@
     {
       "id": "cheshire_cat",
       "origin": "New project-page layout playing the role of original level 6 Volcano: a hazard used, not removed; not a copy of its layout, and not a paper evaluation map.",
-      "solution_steps": 33
+      "solution_steps": 45
     },
     {
       "id": "white_rabbit",
       "origin": "New project-page layout playing the role of original level 11 Affection: MOVE; not a copy of its layout, and not a paper evaluation map.",
-      "solution_steps": 15
+      "solution_steps": 23
     },
     {
       "id": "caterpillar",
@@ -145,24 +145,29 @@
       "solution_steps": 33
     },
     {
-      "id": "golden_key",
-      "origin": "New project-page layout playing the role of original level 14 Lock: one door more than keys; not a copy of its layout, and not a paper evaluation map.",
-      "solution_steps": 31
+      "id": "queen_of_hearts",
+      "origin": "New project-page layout playing the role of original level 17 Changeless: transformation held back by X IS X; not a copy of its layout, and not a paper evaluation map.",
+      "solution_steps": 16
     },
     {
-      "id": "queen_of_hearts",
-      "origin": "New project-page layout playing the role of original level 16 Locked In: transformation; not a copy of its layout, and not a paper evaluation map.",
-      "solution_steps": 28
+      "id": "golden_key",
+      "origin": "New project-page layout playing the role of original level 18 Two Doors: OPEN and SHUT with the obvious use blocked; not a copy of its layout, and not a paper evaluation map.",
+      "solution_steps": 47
     },
     {
       "id": "stolen_tarts",
       "origin": "New project-page layout playing the role of original level 22 Submerged Ruins: a trap that fires as you win; not a copy of its layout, and not a paper evaluation map.",
-      "solution_steps": 14
+      "solution_steps": 17
     },
     {
       "id": "mock_turtle",
       "origin": "New project-page layout playing the role of original level 24 Float; not a copy of its layout, and not a paper evaluation map.",
-      "solution_steps": 28
+      "solution_steps": 43
+    },
+    {
+      "id": "alices_evidence",
+      "origin": "New project-page layout playing the role of original level 30 Victory Spring: TEXT IS FLOAT; not a copy of its layout, and not a paper evaluation map.",
+      "solution_steps": 37
     }
   ],
   "program_runs": {

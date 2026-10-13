@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MAP_ID = "make_a_way"
 # The menu order: each map plays the role of an original level, in the original order (README).
 MAP_IDS = (MAP_ID, "lovely_garden", "pool_of_tears", "lobster_quadrille", "cheshire_cat", "white_rabbit", "caterpillar",
-           "golden_key", "queen_of_hearts", "stolen_tarts", "mock_turtle")
+           "queen_of_hearts", "golden_key", "stolen_tarts", "mock_turtle", "alices_evidence")
 MAX_STEPS = 300  # an attempt ends here (the simulator truncates it)
 EXAMPLE_MOVES = {"movement": ["right"], "push": ["right"] * 3, "wall": ["up"]}  # fixed comparisons: moves from the first map's start
 sys.path.insert(0, str(ROOT / "runtime/vendor"))
