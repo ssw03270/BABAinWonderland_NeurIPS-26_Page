@@ -801,9 +801,9 @@ function setControls() {
   document.querySelectorAll("[data-world]").forEach(button => { button.disabled = busy || autoRunning || !game; });
   $("map-select").disabled = busy || autoRunning || !game;
   $("auto-play").disabled = !autoRunning && (busy || !game);
-  const [icon, label] = autoRunning ? ["■", ` ${game.steps} / ${game.solution.length}`] : autoPaused ? ["▶", " Continue"] : ["▶", " Auto"];
+  const [icon, label] = autoRunning ? ["■", ` ${game.steps} / ${game.solution.length}`] : autoPaused ? ["▶", " Continue"] : ["▶", " Shortest Solve"];
   $("auto-play").replaceChildren(el("span", "", icon), el("span", "label", label));  // (a phone shows the icon only)
-  $("auto-play").title = autoPaused ? "Continue the saved solution from this step" : "Replay the saved solution from step 0";
+  $("auto-play").title = autoPaused ? "Continue the shortest solution from this step" : "Replay the shortest solution from step 0";
   $("auto-play").setAttribute("aria-pressed", String(autoRunning));
   $("copy-program").disabled = !game;
   $("game-shell").setAttribute("aria-busy", String(busy));
