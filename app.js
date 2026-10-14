@@ -807,6 +807,7 @@ function renderOverlay() {
     parts = [el("span", "swipe-hint", "Tap Stay to wait a turn"), hint];
   }
   document.querySelector('[data-action="idle"]').classList.toggle("beckon", waitSign);
+  if (state === "lost" && overlay.dataset.state === "lost") return;  // already said: a move in the meantime keeps it still
   overlay.dataset.state = state;
   overlay.replaceChildren(...parts);
 }
