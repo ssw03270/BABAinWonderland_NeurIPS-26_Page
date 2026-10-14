@@ -723,7 +723,8 @@ function renderTrail() {
   while (box.children.length > 1 && box.scrollWidth > box.clientWidth) box.firstElementChild.remove();
 }
 new ResizeObserver(renderTrail).observe($("trail"));
-// What the board itself shows instead of instructions: on a touch screen, a swipe hint before the first move; WIN
+// What the board itself shows instead of instructions: before the first move, a swipe hint on a touch screen and, on
+// the first map, the keys elsewhere; WIN
 // when won (and the ways on); the way back (undo, restart) when an attempt has ended.
 // The map after this one (the first after the last).
 function nextMap() {
@@ -780,6 +781,7 @@ function renderOverlay() {
   } else if (game.steps === 0 && !autoRunning) {
     state = "start";
     parts = [el("span", "swipe-hint", "Swipe to move")];  // (on a touch screen only)
+    if (game.map === game.maps[0].id) parts.push(el("span", "key-hint", "Use your keyboard (arrows or WASD), or click the controls below"));  // (elsewhere)
   }
   overlay.dataset.state = state;
   overlay.replaceChildren(...parts);
