@@ -673,9 +673,6 @@ function renderStrip() {
   if (to && flip.dataset.version !== to) {
     flip.dataset.version = to;
     flip.textContent = {guess: `↷ ${picked}'s guess`, game: "↶ real game"}[to] || (to === previous ? `↶ ${to} before the fix` : `↷ ${to} after the fix`);
-    flip.classList.remove("nudge");
-    void flip.offsetWidth;
-    flip.classList.add("nudge");
   }
   if (!to) delete flip.dataset.version;
 }
