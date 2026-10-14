@@ -779,9 +779,14 @@ function renderOverlay() {
     state = "ended";
     parts = [card(ways([["Z", "undo", "undo"], ["R", "restart", "restart"]]))];
   } else if (game.steps === 0 && !autoRunning) {
-    state = "start";
+    const first = game.map === game.maps[0].id;  // the first map says it over the middle of the board
+    state = first ? "intro" : "start";
     parts = [el("span", "swipe-hint", "Swipe to move")];  // (on a touch screen only)
-    if (game.map === game.maps[0].id) parts.push(el("span", "key-hint", "Use your keyboard (arrows or WASD), or click the controls below"));  // (elsewhere)
+    if (first) {  // (elsewhere)
+      const hint = el("span", "key-hint");
+      hint.append(el("strong", "", "Use your keyboard (arrows or WASD)"), el("span", "", "or click the controls below"));
+      parts.push(hint);
+    }
   }
   overlay.dataset.state = state;
   overlay.replaceChildren(...parts);
