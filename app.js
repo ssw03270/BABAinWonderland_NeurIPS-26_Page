@@ -720,14 +720,20 @@ function renderTrail() {
   while (box.children.length > 1 && box.scrollWidth > box.clientWidth) box.firstElementChild.remove();
 }
 new ResizeObserver(renderTrail).observe($("trail"));
-// What the board itself shows instead of instructions: before the first move, a swipe hint on a touch screen and, on
-// the first map, the keys elsewhere; WIN
+// What the board itself shows instead of instructions: before the first move, a swipe hint on a touch screen, and on
+// the maps below the keys they first need (the first map's over the middle of the board); WIN
 // when won (and the ways on); the way back (undo, restart) when an attempt has ended.
 // The map after this one (the first after the last).
 function nextMap() {
   const k = game.maps.findIndex(({id}) => id === game.map);
   return {id: game.maps[(k + 1) % game.maps.length].id, first: k + 1 === game.maps.length};
 }
+// The keys a map first needs, said before its first move: moving on the first map, and staying where things first move
+// on their own (on a touch screen, the map's own words replace the swipe hint).
+const START_SIGNS = {
+  make_a_way: {middle: true, keys: ["Use your keyboard (arrows or WASD)", "or click the controls below"]},
+  lobster_errand: {keys: ["Space or Stay waits a turn while things move"], touch: "Tap Stay to wait a turn while things move"},
+};
 function renderOverlay() {
   const overlay = $("game-overlay");
   // an end's ways on: buttons that say their key (a click or a tap does what the key does)
@@ -776,12 +782,12 @@ function renderOverlay() {
     state = "ended";
     parts = [card(ways([["Z", "undo", "undo"], ["R", "restart", "restart"]]))];
   } else if (game.steps === 0 && !autoRunning) {
-    const first = game.map === game.maps[0].id;  // the first map says it over the middle of the board
-    state = first ? "intro" : "start";
-    parts = [el("span", "swipe-hint", "Swipe to move")];  // (on a touch screen only)
-    if (first) {  // (elsewhere)
+    const sign = START_SIGNS[game.map];
+    state = sign?.middle ? "intro" : "start";
+    parts = [el("span", "swipe-hint", sign?.touch || "Swipe to move")];  // (on a touch screen only)
+    if (sign) {  // (elsewhere)
       const hint = el("span", "key-hint");
-      hint.append(el("strong", "", "Use your keyboard (arrows or WASD)"), el("span", "", "or click the controls below"));
+      hint.append(el("strong", "", sign.keys[0]), ...sign.keys.slice(1).map((line) => el("span", "", line)));
       parts.push(hint);
     }
   }
