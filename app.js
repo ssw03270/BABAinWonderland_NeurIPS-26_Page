@@ -735,7 +735,8 @@ const START_SIGNS = {make_a_way: ["Use your keyboard (arrows or WASD)", "or clic
 const WAIT_MAP = "lobster_errand";
 let waited = false;
 const moving = (board) => youWords(board, "move").size > 0;
-// Where Baba can first be lost (sunk, then defeated), losing every YOU brings up the way back; the game itself goes on.
+// Where Baba can first be lost (sunk, then defeated), losing every YOU brings up the way back at the bottom of the
+// board; the game itself goes on.
 const LOST_MAPS = new Set(["pool_of_tears", "lobster_quadrille"]);
 function renderOverlay() {
   const overlay = $("game-overlay");
@@ -786,8 +787,10 @@ function renderOverlay() {
     state = "ended";
     parts = [card(ways([["Z", "undo", "undo"], ["R", "restart", "restart"]]))];
   } else if (LOST_MAPS.has(game.map) && !autoRunning && !youCells(game.board).length) {
-    state = "ended";
-    parts = [card(el("strong", "sign-title", "Nothing is YOU now"), ways([["Z", "undo", "undo"], ["R", "restart", "restart"]]))];
+    state = "lost";  // under the board, not over it: the game is not over
+    const sign = el("div", "lost-sign");
+    sign.append(el("strong", "", "Nothing is YOU now"), ways([["Z", "undo", "undo"], ["R", "restart", "restart"]]));
+    parts = [sign];
   } else if (game.steps === 0 && !autoRunning) {
     const sign = START_SIGNS[game.map];
     state = sign ? "intro" : "start";
