@@ -458,14 +458,14 @@ const stories = [];
 function showStep(story, k) {
   story.step = k;
   story.since = performance.now();
-  const {shot, text, code} = STORIES[story.scene][k], verdict = {failed: "no", fixed: "yes"}[shot];
+  const verdict = {failed: "no", fixed: "yes"}[STORIES[story.scene][k].shot];
   story.steps.forEach((step) => step.classList.remove("active"));
   void story.steps[k].offsetWidth;  // (a restart: the bar fills again from empty, the same step clicked again too)
   story.steps[k].classList.add("active");
   story.badge.hidden = !verdict;
   story.badge.className = `story-badge ${verdict || ""}`;
   story.badge.textContent = verdict === "no" ? "✗" : "✓";
-  story.caption.replaceChildren(el("span", "", text), ...(code ? [el("code", verdict, code)] : []));
+  story.lines.forEach((line, i) => line.classList.toggle("on", i === k));
   story.draw();
 }
 setInterval(() => {
@@ -502,6 +502,14 @@ async function renderExamples() {
         return step;
       });
       card.querySelector(".story-steps").replaceChildren(...story.steps);
+      // every step's line sits in the caption at once, only the step's own shown, so the caption keeps the height of
+      // its longest line and the page under it does not jump as the steps turn
+      story.lines = STORIES[example.scene].map(({shot, text, code}) => {
+        const line = el("span", "caption-line");
+        line.append(el("span", "", text), ...(code ? [el("code", {failed: "no", fixed: "yes"}[shot], code)] : []));
+        return line;
+      });
+      story.caption.replaceChildren(...story.lines);
       story.draw = () => {
         const [board, cells, overlay] = shots[STORIES[example.scene][story.step].shot];
         drawBoard(canvas, board, frame, cells, "default", {}, overlay);
@@ -821,13 +829,14 @@ function renderVersions() {
   $("map-objective").textContent = game.objective;
 }
 
+// A move in flight does not grey the controls (that made them blink at every move); requests made meanwhile are dropped.
 function setControls() {
-  document.querySelectorAll("[data-action]").forEach((button) => { button.disabled = busy || autoRunning || !game || game.ended; });
-  $("undo").disabled = busy || autoRunning || !game?.canUndo;
-  $("restart").disabled = busy || autoRunning || !game;
-  document.querySelectorAll("[data-world]").forEach(button => { button.disabled = busy || autoRunning || !game; });
-  $("map-select").disabled = busy || autoRunning || !game;
-  $("auto-play").disabled = !autoRunning && (busy || !game);
+  document.querySelectorAll("[data-action]").forEach((button) => { button.disabled = autoRunning || !game || game.ended; });
+  $("undo").disabled = autoRunning || !game?.canUndo;
+  $("restart").disabled = autoRunning || !game;
+  document.querySelectorAll("[data-world]").forEach(button => { button.disabled = autoRunning || !game; });
+  $("map-select").disabled = autoRunning || !game;
+  $("auto-play").disabled = !autoRunning && !game;
   const [icon, label] = autoRunning ? ["■", ` ${game.steps} / ${game.solution.length}`] : autoPaused ? ["▶", " Continue"] : ["▶", " Shortest Solve"];
   $("auto-play").replaceChildren(el("span", "", icon), el("span", "label", label));  // (a phone shows the icon only)
   $("auto-play").title = autoPaused ? "Continue the shortest solution from this step" : "Replay the shortest solution from step 0";
@@ -936,7 +945,10 @@ $("code-changes").addEventListener("click", (event) => {
   pre.scrollTo({top: pre.scrollTop + row.getBoundingClientRect().top - pre.getBoundingClientRect().top - 8, behavior: "smooth"});
 });
 $("program-source").parentElement.addEventListener("scroll", markFunctionInView, {passive: true});
-$("map-select").addEventListener("change", () => { $("map-select").blur(); gameRequest("/reset",{map:$("map-select").value}); });
+$("map-select").addEventListener("change", async () => {
+  $("map-select").blur();
+  if (!await gameRequest("/reset", {map: $("map-select").value})) $("map-select").value = game.map;  // (dropped while busy)
+});
 document.querySelectorAll("[data-code-view]").forEach(button => button.addEventListener("click", () => {
   codeView = button.dataset.codeView;
   document.querySelectorAll("[data-code-view]").forEach(other => other.setAttribute("aria-pressed",String(other===button)));
