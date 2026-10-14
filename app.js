@@ -728,12 +728,13 @@ function nextMap() {
   const k = game.maps.findIndex(({id}) => id === game.map);
   return {id: game.maps[(k + 1) % game.maps.length].id, first: k + 1 === game.maps.length};
 }
-// The keys a map first needs, said before its first move: moving on the first map, and staying where things first move
-// on their own (on a touch screen, the map's own words replace the swipe hint).
-const START_SIGNS = {
-  make_a_way: {middle: true, keys: ["Use your keyboard (arrows or WASD)", "or click the controls below"]},
-  lobster_errand: {keys: ["Space or Stay waits a turn while things move"], touch: "Tap Stay to wait a turn while things move"},
-};
+// The keys a map first needs, said over the middle of its board before its first move.
+const START_SIGNS = {make_a_way: ["Use your keyboard (arrows or WASD)", "or click the controls below"]};
+// Where things first move on their own, staying is said (and the Stay button glows) once something is MOVE, until the
+// player first stays while it is.
+const WAIT_MAP = "lobster_errand";
+let waited = false;
+const moving = (board) => youWords(board, "move").size > 0;
 function renderOverlay() {
   const overlay = $("game-overlay");
   // an end's ways on: buttons that say their key (a click or a tap does what the key does)
@@ -775,6 +776,7 @@ function renderOverlay() {
   const prediction = game.comparison?.[game.world];
   const shownWon = prediction?.board && !realView() ? Boolean(prediction.board.step?.terminated) : game.won;  // the board shown decides
   let state = "", parts = [];
+  const waitSign = game.map === WAIT_MAP && !waited && !autoRunning && !game.ended && moving(game.board);
   if (shownWon) {
     state = "won";
     parts = [card(youWin(), ...(game.won ? [ways([["R", "play again", "restart"], ["N", nextMap().first ? "first map" : "next map", "next"]])] : []))];
@@ -783,14 +785,20 @@ function renderOverlay() {
     parts = [card(ways([["Z", "undo", "undo"], ["R", "restart", "restart"]]))];
   } else if (game.steps === 0 && !autoRunning) {
     const sign = START_SIGNS[game.map];
-    state = sign?.middle ? "intro" : "start";
-    parts = [el("span", "swipe-hint", sign?.touch || "Swipe to move")];  // (on a touch screen only)
+    state = sign ? "intro" : "start";
+    parts = [el("span", "swipe-hint", "Swipe to move")];  // (on a touch screen only)
     if (sign) {  // (elsewhere)
       const hint = el("span", "key-hint");
-      hint.append(el("strong", "", sign.keys[0]), ...sign.keys.slice(1).map((line) => el("span", "", line)));
+      hint.append(el("strong", "", sign[0]), ...sign.slice(1).map((line) => el("span", "", line)));
       parts.push(hint);
     }
+  } else if (waitSign) {
+    state = "wait";
+    const hint = el("span", "key-hint");
+    hint.append(el("strong", "", "Wait a turn with Space or the Stay button"), el("span", "", "and watch what moves on its own"));
+    parts = [el("span", "swipe-hint", "Tap Stay to wait a turn"), hint];
   }
+  document.querySelector('[data-action="idle"]').classList.toggle("beckon", waitSign);
   overlay.dataset.state = state;
   overlay.replaceChildren(...parts);
 }
@@ -849,6 +857,8 @@ async function gameRequest(path = "", body) {
       showGuess = false;
       verdicts = new Map(judged.map(({version, match}) => [version, match]));
     }
+    if (path === "/action" && body.action === "idle" && moving(before.board)) waited = true;
+    if (path === "/reset") waited = false;
     if (["/action", "/undo"].includes(path)) stepWalkFrames(before?.board, next.board);
     else if (path === "/reset" || !before) walkFrames = new Map();  // a new start: everyone stands
     game = next; renderGame();
